@@ -37,6 +37,9 @@ module.exports = async (req, res) => {
     if (url.endsWith('/reset-password')) {
       return handleResetPassword(req, res);
     }
+    if (url.endsWith('/reset-password-token')) {
+      return handleResetPasswordToken(req, res);
+    }
 
     /* ---- CRUD usuarios (solo admin) ---- */
     if (!(await checkRole(req, 'admin'))) {
@@ -202,21 +205,69 @@ async function handleResetPassword(req, res) {
 /* ---- Olvidé contraseña: envía email ---- */
 async function handleForgotPassword(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  const { username } = req.body || {};
-  /* Siempre respondemos OK para no revelar si el usuario existe */
-  if (!username) return res.status(200).json({ ok: true });
+  const { usernameOrEmail } = req.body || {};
+  if (!usernameOrEmail) return res.status(200).json({ ok: true });
 
   try {
     const { users } = await readUsers();
-    const user = users.find(u => u.username === username.toLowerCase());
+    const input = usernameOrEmail.toLowerCase().trim();
+    /* Buscar por username O por email */
+    const user = users.find(u =>
+      u.username === input ||
+      (u.email && u.email.toLowerCase() === input)
+    );
     if (user && user.email) {
       const token    = require('crypto').randomBytes(20).toString('hex');
-      const resetUrl = `${process.env.APP_URL || ''}/reset-password.html?token=${token}&user=${encodeURIComponent(username)}`;
+      const resetUrl = `${process.env.APP_URL || ''}/reset-password.html?token=${token}&user=${encodeURIComponent(user.username)}`;
+      /* Guardar token en users.json para validarlo después */
+      const { users: allUsers, sha } = await readUsers();
+      const uidx = allUsers.findIndex(u => u.username === user.username);
+      if (uidx !== -1) {
+        allUsers[uidx].resetToken   = token;
+        allUsers[uidx].resetTokenAt = Date.now();
+        await writeUsers(allUsers, sha, `forgot password: ${user.username}`);
+      }
       await emailjs.sendResetEmail(user.email, user.username, resetUrl);
     }
   } catch (e) {
     console.error('Forgot password error:', e);
   }
 
+  return res.status(200).json({ ok: true });
+}
+
+/* ---- Reset contraseña por token (desde email) ---- */
+async function handleResetPasswordToken(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  const { username, token, newPassword } = req.body || {};
+
+  if (!username || !token || !newPassword) {
+    return res.status(400).json({ error: 'Faltan datos' });
+  }
+  if (newPassword.length < 6) {
+    return res.status(400).json({ error: 'Contraseña demasiado corta' });
+  }
+
+  const { users, sha } = await readUsers();
+  const idx = users.findIndex(u => u.username === username.toLowerCase());
+  if (idx === -1) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+  const user = users[idx];
+
+  /* Validar token y que no haya caducado (1 hora) */
+  if (!user.resetToken || user.resetToken !== token) {
+    return res.status(400).json({ error: 'Token no válido' });
+  }
+  const tokenAge = Date.now() - (user.resetTokenAt || 0);
+  if (tokenAge > 3600000) {
+    return res.status(400).json({ error: 'El enlace ha caducado. Solicita uno nuevo.' });
+  }
+
+  users[idx].passwordHash  = await hashPassword(newPassword);
+  users[idx].firstLogin    = false;
+  users[idx].resetToken    = null;
+  users[idx].resetTokenAt  = null;
+
+  await writeUsers(users, sha, `reset password token: ${username}`);
   return res.status(200).json({ ok: true });
 }

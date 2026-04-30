@@ -1,11 +1,12 @@
 {
   "version": 2,
   "rewrites": [
-    { "source": "/api/users/first-login",     "destination": "/api/users" },
-    { "source": "/api/users/reset-password",  "destination": "/api/users" },
-    { "source": "/api/users/forgot-password", "destination": "/api/users" },
-    { "source": "/api/users/change-password", "destination": "/api/users" },
-    { "source": "/api/users/:username",       "destination": "/api/users?username=:username" },
-    { "source": "/api/heroes/:id",            "destination": "/api/heroes?id=:id" }
+    { "source": "/api/users/first-login",          "destination": "/api/users" },
+    { "source": "/api/users/reset-password",        "destination": "/api/users" },
+    { "source": "/api/users/reset-password-token",  "destination": "/api/users" },
+    { "source": "/api/users/forgot-password",       "destination": "/api/users" },
+    { "source": "/api/users/change-password",       "destination": "/api/users" },
+    { "source": "/api/users/:username",             "destination": "/api/users?username=:username" },
+    { "source": "/api/heroes/:id",                  "destination": "/api/heroes?id=:id" }
   ]
 }

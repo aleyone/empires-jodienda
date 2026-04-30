@@ -1,12 +1,11 @@
 /* ============================================================
-   auth.js — Gestión de sesión (sessionStorage) y roles
+   auth.js — Gestión de sesión y roles
    ============================================================ */
 
 const Auth = (() => {
 
   const SESSION_KEY = 'mk_session';
 
-  /* Obtiene la sesión actual del sessionStorage */
   function getSession() {
     try {
       const raw = sessionStorage.getItem(SESSION_KEY);
@@ -14,7 +13,6 @@ const Auth = (() => {
     } catch { return null; }
   }
 
-  /* Guarda la sesión */
   function setSession(user) {
     sessionStorage.setItem(SESSION_KEY, JSON.stringify({
       username: user.username,
@@ -23,82 +21,56 @@ const Auth = (() => {
     }));
   }
 
-  /* Borra la sesión */
   function clearSession() {
     sessionStorage.removeItem(SESSION_KEY);
   }
 
-  /* ¿Está autenticado? */
-  function isLoggedIn() {
-    return !!getSession();
-  }
+  function isLoggedIn() { return !!getSession(); }
+  function getRole()     { return getSession()?.role || null; }
+  function getUsername() { return getSession()?.username || null; }
+  function isAdmin()     { return getRole() === 'admin'; }
+  function isEditor()    { return getRole() === 'editor' || isAdmin(); }
+  function canEdit()     { return isEditor(); }
 
-  /* Rol actual */
-  function getRole() {
-    const s = getSession();
-    return s ? s.role : null;
-  }
-
-  /* Username actual */
-  function getUsername() {
-    const s = getSession();
-    return s ? s.username : null;
-  }
-
-  /* Comprobaciones de rol */
-  function isAdmin()    { return getRole() === 'admin'; }
-  function isEditor()   { return getRole() === 'editor' || isAdmin(); }
-  function canEdit()    { return isEditor(); }
-
-  /* Redirige al login si no hay sesión. Llama al inicio de cada página protegida */
+  /* Redirige al login guardando la URL actual como returnUrl */
   function requireAuth() {
     if (!isLoggedIn()) {
-      window.location.href = 'login.html';
+      const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+      window.location.href = `login.html?returnUrl=${returnUrl}`;
       return false;
     }
     return true;
   }
 
-  /* Solo admins — si no es admin, redirige al inicio */
   function requireAdmin() {
     if (!requireAuth()) return false;
-    if (!isAdmin()) {
-      window.location.href = 'index.html';
-      return false;
-    }
+    if (!isAdmin()) { window.location.href = 'index.html'; return false; }
     return true;
   }
 
-  /* Solo editores o admins */
   function requireEditor() {
     if (!requireAuth()) return false;
-    if (!canEdit()) {
-      window.location.href = 'index.html';
-      return false;
-    }
+    if (!canEdit()) { window.location.href = 'index.html'; return false; }
     return true;
   }
 
-  /* Inicializa la navbar con datos del usuario */
   function initNavbar() {
     const session = getSession();
     if (!session) return;
 
-    const avatar   = document.getElementById('nav-avatar');
-    const username = document.getElementById('nav-username');
-    const menuBtn  = document.getElementById('nav-menu-btn');
-    const menu     = document.getElementById('navbar-menu');
+    const avatar    = document.getElementById('nav-avatar');
+    const username  = document.getElementById('nav-username');
+    const menuBtn   = document.getElementById('nav-menu-btn');
+    const menu      = document.getElementById('navbar-menu');
     const menuAdmin = document.getElementById('menu-admin');
-    const btnAdd   = document.getElementById('btn-add-hero');
+    const btnAdd    = document.getElementById('btn-add-hero');
     const btnLogout = document.getElementById('btn-logout');
 
     if (avatar)   avatar.textContent = session.username.charAt(0).toUpperCase();
     if (username) username.textContent = session.username;
-
     if (menuAdmin && isAdmin()) menuAdmin.style.display = 'block';
     if (btnAdd && canEdit())    btnAdd.style.display = 'inline-flex';
 
-    /* Toggle menú */
     if (menuBtn && menu) {
       menuBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -107,7 +79,6 @@ const Auth = (() => {
       document.addEventListener('click', () => menu.classList.remove('open'));
     }
 
-    /* Logout */
     if (btnLogout) {
       btnLogout.addEventListener('click', () => {
         clearSession();
