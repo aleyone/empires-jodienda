@@ -668,15 +668,12 @@ select.form-control option {
   background: rgba(0,0,0,0.75);
   backdrop-filter: blur(4px);
   z-index: 500;
-  overflow-y: auto;
-  padding: 1rem;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease;
-  /* Centrado con margen automático para que funcione con scroll */
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
+  /* Scroll nativo del backdrop */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .modal-backdrop.open {
@@ -688,14 +685,14 @@ select.form-control option {
   background: var(--bg-card);
   border: 1px solid var(--border-gold);
   border-radius: var(--radius-xl);
-  width: 100%;
+  width: calc(100% - 2rem);
   max-width: 480px;
   padding: 1.75rem;
   position: relative;
-  margin: auto; /* centra verticalmente cuando hay espacio */
+  /* Centrado con margen, siempre dentro del viewport */
+  margin: 1rem auto;
   transform: translateY(16px);
   transition: transform 0.2s ease;
-  flex-shrink: 0;
 }
 
 .modal-backdrop.open .modal { transform: translateY(0); }
