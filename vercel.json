@@ -1,13 +1,11 @@
 {
   "version": 2,
-  "routes": [
-    { "src": "/api/users/first-login",    "dest": "/api/users.js" },
-    { "src": "/api/users/reset-password", "dest": "/api/users.js" },
-    { "src": "/api/users/forgot-password","dest": "/api/users.js" },
-    { "src": "/api/users/([^/]+)",        "dest": "/api/users.js?username=$1" },
-    { "src": "/api/users",                "dest": "/api/users.js" },
-    { "src": "/api/heroes/([^/]+)",       "dest": "/api/heroes.js?id=$1" },
-    { "src": "/api/heroes",               "dest": "/api/heroes.js" },
-    { "src": "/api/login",                "dest": "/api/login.js" }
+  "rewrites": [
+    { "source": "/api/users/first-login",     "destination": "/api/users" },
+    { "source": "/api/users/reset-password",  "destination": "/api/users" },
+    { "source": "/api/users/forgot-password", "destination": "/api/users" },
+    { "source": "/api/users/change-password", "destination": "/api/users" },
+    { "source": "/api/users/:username",       "destination": "/api/users?username=:username" },
+    { "source": "/api/heroes/:id",            "destination": "/api/heroes?id=:id" }
   ]
 }

@@ -82,6 +82,8 @@ document.getElementById('hero-image-input').addEventListener('change', async (e)
   try {
     const result = await compressImage(file, 400);
     compressedBlob = result.blob;
+    /* Guardar extensión real para nombrar el fichero en el servidor */
+    compressedBlob._ext = result.isPng ? 'png' : 'jpg';
 
     progressBar.style.width = '100%';
     const kb = Math.round(result.size / 1024);

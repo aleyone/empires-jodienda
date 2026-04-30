@@ -1,10 +1,11 @@
 /* api/users.js — Gestión de usuarios
-   Rutas:
+   Rutas (detectadas por req.url):
      GET    /api/users                     → lista (solo admin)
      POST   /api/users                     → crear usuario (solo admin)
      PUT    /api/users?username=xxx        → editar usuario (solo admin)
      DELETE /api/users?username=xxx        → eliminar (solo admin)
      POST   /api/users/first-login         → cambiar pass + email primer acceso
+     POST   /api/users/change-password     → usuario cambia su propia contraseña
      POST   /api/users/reset-password      → admin resetea contraseña
      POST   /api/users/forgot-password     → solicitar reset por email
 */
@@ -13,20 +14,28 @@ const { readUsers, writeUsers, checkRole, hashPassword } = require('./_helpers')
 const emailjs = require('./_emailjs');
 
 module.exports = async (req, res) => {
+  /* Cabeceras CORS por si acaso */
+  res.setHeader('Content-Type', 'application/json');
+
+  const url      = (req.url || '').split('?')[0]; /* sin query string */
   const { username } = req.query;
-  const url = req.url || '';
 
   try {
 
-    /* ---- Rutas especiales ---- */
-    if (url.includes('/first-login') || (req.method === 'POST' && req.body?.action === 'first-login')) {
+    /* ---- Rutas especiales (no requieren admin) ---- */
+    if (url.endsWith('/first-login')) {
       return handleFirstLogin(req, res);
     }
-    if (url.includes('/reset-password') || (req.method === 'POST' && req.body?.action === 'reset-password')) {
-      return handleResetPassword(req, res);
+    if (url.endsWith('/change-password')) {
+      return handleChangePassword(req, res);
     }
-    if (url.includes('/forgot-password') || (req.method === 'POST' && req.body?.action === 'forgot-password')) {
+    if (url.endsWith('/forgot-password')) {
       return handleForgotPassword(req, res);
+    }
+
+    /* ---- Reset password (requiere admin) ---- */
+    if (url.endsWith('/reset-password')) {
+      return handleResetPassword(req, res);
     }
 
     /* ---- CRUD usuarios (solo admin) ---- */
@@ -53,6 +62,9 @@ module.exports = async (req, res) => {
         if (!newUser || !password || !role) {
           return res.status(400).json({ error: 'Faltan datos obligatorios' });
         }
+        if (!/^[a-z0-9_]+$/i.test(newUser)) {
+          return res.status(400).json({ error: 'Nombre de usuario no válido' });
+        }
         const { users, sha } = await readUsers();
         if (users.find(u => u.username === newUser.toLowerCase())) {
           return res.status(409).json({ error: 'El nombre de usuario ya existe' });
@@ -77,13 +89,13 @@ module.exports = async (req, res) => {
         const idx = users.findIndex(u => u.username === username);
         if (idx === -1) return res.status(404).json({ error: 'Usuario no encontrado' });
         if (newName && newName !== username) {
-          if (users.find(u => u.username === newName)) {
+          if (users.find(u => u.username === newName.toLowerCase())) {
             return res.status(409).json({ error: 'El nombre ya está en uso' });
           }
           users[idx].username = newName.toLowerCase();
         }
         if (email !== undefined) users[idx].email = email;
-        if (role)  users[idx].role = role;
+        if (role) users[idx].role = role;
         await writeUsers(users, sha, `update user: ${username}`);
         return res.status(200).json({ ok: true });
       }
@@ -108,22 +120,26 @@ module.exports = async (req, res) => {
     }
 
   } catch (err) {
-    console.error(err);
+    console.error('[users.js]', err);
     return res.status(500).json({ error: err.message || 'Error interno' });
   }
 };
 
 /* ---- Primer acceso: guardar email + nueva contraseña ---- */
 async function handleFirstLogin(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   const { username, email, newPassword } = req.body || {};
   if (!username || !email || !newPassword) {
     return res.status(400).json({ error: 'Faltan datos' });
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ error: 'Email no válido' });
   }
   if (newPassword.length < 6) {
     return res.status(400).json({ error: 'Contraseña demasiado corta' });
   }
   const { users, sha } = await readUsers();
-  const idx = users.findIndex(u => u.username === username);
+  const idx = users.findIndex(u => u.username === username.toLowerCase());
   if (idx === -1) return res.status(404).json({ error: 'Usuario no encontrado' });
 
   users[idx].email        = email;
@@ -134,8 +150,37 @@ async function handleFirstLogin(req, res) {
   return res.status(200).json({ ok: true });
 }
 
+/* ---- Usuario cambia su propia contraseña ---- */
+async function handleChangePassword(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  const callerUsername = req.headers['x-username'];
+  if (!callerUsername) return res.status(401).json({ error: 'No autenticado' });
+
+  const { currentPassword, newPassword } = req.body || {};
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'Faltan datos' });
+  }
+  if (newPassword.length < 6) {
+    return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 6 caracteres' });
+  }
+
+  const { users, sha } = await readUsers();
+  const idx = users.findIndex(u => u.username === callerUsername);
+  if (idx === -1) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+  const currentHash = await hashPassword(currentPassword);
+  if (users[idx].passwordHash !== currentHash) {
+    return res.status(401).json({ error: 'La contraseña actual no es correcta' });
+  }
+
+  users[idx].passwordHash = await hashPassword(newPassword);
+  await writeUsers(users, sha, `change password: ${callerUsername}`);
+  return res.status(200).json({ ok: true });
+}
+
 /* ---- Admin resetea contraseña de un usuario ---- */
 async function handleResetPassword(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   if (!(await checkRole(req, 'admin'))) {
     return res.status(403).json({ error: 'Sin permisos' });
   }
@@ -148,7 +193,7 @@ async function handleResetPassword(req, res) {
   if (idx === -1) return res.status(404).json({ error: 'Usuario no encontrado' });
 
   users[idx].passwordHash = await hashPassword(newPassword);
-  users[idx].firstLogin   = true; /* Le obliga a cambiarla */
+  users[idx].firstLogin   = true; /* Le obliga a cambiarla en el próximo acceso */
 
   await writeUsers(users, sha, `reset password: ${targetUsername}`);
   return res.status(200).json({ ok: true });
@@ -156,6 +201,7 @@ async function handleResetPassword(req, res) {
 
 /* ---- Olvidé contraseña: envía email ---- */
 async function handleForgotPassword(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   const { username } = req.body || {};
   /* Siempre respondemos OK para no revelar si el usuario existe */
   if (!username) return res.status(200).json({ ok: true });
@@ -164,9 +210,8 @@ async function handleForgotPassword(req, res) {
     const { users } = await readUsers();
     const user = users.find(u => u.username === username.toLowerCase());
     if (user && user.email) {
-      /* Generamos token temporal (en producción usaría Redis/DB, aquí es simple) */
-      const token = require('crypto').randomBytes(20).toString('hex');
-      const resetUrl = `${process.env.APP_URL || ''}/reset-password.html?token=${token}&user=${username}`;
+      const token    = require('crypto').randomBytes(20).toString('hex');
+      const resetUrl = `${process.env.APP_URL || ''}/reset-password.html?token=${token}&user=${encodeURIComponent(username)}`;
       await emailjs.sendResetEmail(user.email, user.username, resetUrl);
     }
   } catch (e) {

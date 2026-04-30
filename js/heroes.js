@@ -24,7 +24,7 @@ const HeroesAPI = (() => {
     const session = Auth.getSession();
     const formData = new FormData();
     formData.append('data', JSON.stringify(heroData));
-    if (imageBlob) formData.append('image', imageBlob, 'hero.jpg');
+    if (imageBlob) formData.append('image', imageBlob, 'hero.' + (imageBlob._ext || 'jpg'));
 
     const res = await fetch('/api/heroes', {
       method: 'POST',
@@ -44,7 +44,7 @@ const HeroesAPI = (() => {
     const session = Auth.getSession();
     const formData = new FormData();
     formData.append('data', JSON.stringify(heroData));
-    if (imageBlob) formData.append('image', imageBlob, 'hero.jpg');
+    if (imageBlob) formData.append('image', imageBlob, 'hero.' + (imageBlob._ext || 'jpg'));
 
     const res = await fetch(`/api/heroes/${id}`, {
       method: 'PUT',

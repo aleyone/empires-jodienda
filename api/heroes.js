@@ -1,13 +1,17 @@
-/* api/heroes.js — CRUD de héroes */
-
-export const config = { api: { bodyParser: false } };
+/* api/heroes.js — CRUD de héroes
+   Vercel: bodyParser desactivado para recibir multipart correctamente
+*/
 
 const { readHeroes, writeHeroes, uploadImage, deleteFile, checkRole } = require('./_helpers');
 const formidable = require('formidable');
 const fs         = require('fs');
 const crypto     = require('crypto');
 
-module.exports = async (req, res) => {
+/* Desactivar bodyParser de Vercel — obligatorio para multipart/form-data */
+module.exports = handler;
+module.exports.config = { api: { bodyParser: false } };
+
+async function handler(req, res) {
   res.setHeader('Content-Type', 'application/json');
   const { id } = req.query;
 
@@ -31,7 +35,7 @@ module.exports = async (req, res) => {
         const { heroData, imageBuffer, imageExt } = await parseMultipart(req);
 
         let imagePath = null;
-        if (imageBuffer) {
+        if (imageBuffer && imageBuffer.length > 0) {
           const filename = `${Date.now()}-${crypto.randomBytes(4).toString('hex')}.${imageExt}`;
           imagePath = await uploadImage(filename, imageBuffer);
           await delay(2000);
@@ -61,7 +65,7 @@ module.exports = async (req, res) => {
         if (idx === -1) return res.status(404).json({ error: 'Héroe no encontrado' });
 
         let imagePath = heroes[idx].imagePath;
-        if (imageBuffer) {
+        if (imageBuffer && imageBuffer.length > 0) {
           const filename = `${Date.now()}-${crypto.randomBytes(4).toString('hex')}.${imageExt}`;
           imagePath = await uploadImage(filename, imageBuffer);
           await delay(2000);
@@ -89,7 +93,10 @@ module.exports = async (req, res) => {
 
         const hero = heroes[idx];
         if (hero.imagePath) {
-          await deleteFile(hero.imagePath.replace(/^\//, ''), `delete image: ${hero.name}`).catch(() => {});
+          await deleteFile(
+            hero.imagePath.replace(/^.*githubusercontent\.com\/[^/]+\/[^/]+\/[^/]+\//, ''),
+            `delete image: ${hero.name}`
+          ).catch(() => {});
         }
         heroes.splice(idx, 1);
         await writeHeroes(heroes, sha, `delete hero: ${hero.name}`);
@@ -100,16 +107,16 @@ module.exports = async (req, res) => {
         return res.status(405).json({ error: 'Method not allowed' });
     }
   } catch (err) {
-    console.error('[heroes.js]', err);
+    console.error('[heroes.js]', err.message, err.stack);
     return res.status(500).json({ error: err.message || 'Error interno' });
   }
-};
+}
 
+/* ---- Parsear multipart ---- */
 function parseMultipart(req) {
   return new Promise((resolve, reject) => {
-    /* formidable v3: se instancia con new formidable.Formidable() */
     const form = new formidable.Formidable({
-      maxFileSize: 500 * 1024,
+      maxFileSize:    500 * 1024,
       keepExtensions: true
     });
 
@@ -120,7 +127,9 @@ function parseMultipart(req) {
       try {
         const raw = Array.isArray(fields.data) ? fields.data[0] : fields.data;
         heroData = JSON.parse(raw || '{}');
-      } catch {}
+      } catch (e) {
+        console.error('Error parsing heroData JSON:', e);
+      }
 
       let imageBuffer = null;
       let imageExt    = 'jpg';
@@ -128,11 +137,16 @@ function parseMultipart(req) {
         ? (Array.isArray(files.image) ? files.image[0] : files.image)
         : null;
 
-      if (imgFile) {
-        imageBuffer = fs.readFileSync(imgFile.filepath || imgFile.path);
-        const originalName = imgFile.originalFilename || imgFile.name || 'hero.jpg';
-        imageExt = originalName.split('.').pop().toLowerCase() || 'jpg';
-        if (!['jpg','jpeg','png','webp'].includes(imageExt)) imageExt = 'jpg';
+      if (imgFile && imgFile.size > 0) {
+        try {
+          imageBuffer = fs.readFileSync(imgFile.filepath || imgFile.path);
+          const originalName = imgFile.originalFilename || imgFile.name || 'hero.jpg';
+          imageExt = originalName.split('.').pop().toLowerCase() || 'jpg';
+          if (!['jpg', 'jpeg', 'png', 'webp'].includes(imageExt)) imageExt = 'jpg';
+          console.log(`[heroes] image received: ${originalName}, size: ${imageBuffer.length}, ext: ${imageExt}`);
+        } catch (e) {
+          console.error('Error reading image file:', e);
+        }
       }
 
       resolve({ heroData, imageBuffer, imageExt });

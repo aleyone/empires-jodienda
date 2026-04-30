@@ -13,7 +13,7 @@ function showToast(msg, type = 'info', duration = 3000) {
   setTimeout(() => t.remove(), duration);
 }
 
-/* ---- SHA-256 (para hashes de contraseña en cliente) ---- */
+/* ---- SHA-256 ---- */
 async function sha256(message) {
   const msgBuffer = new TextEncoder().encode(message);
   const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
@@ -27,7 +27,7 @@ function renderStarsReadonly(container, value, type = 'gold') {
   container.innerHTML = '';
   for (let i = 1; i <= 5; i++) {
     const s = document.createElement('span');
-    s.className = 'star stars-readonly' + (i <= value ? (type === 'red' ? ' filled-red' : ' filled') : '');
+    s.className = 'star' + (i <= value ? (type === 'red' ? ' filled-red' : ' filled') : '');
     s.textContent = '★';
     container.appendChild(s);
   }
@@ -36,12 +36,7 @@ function renderStarsReadonly(container, value, type = 'gold') {
 function initStarRating(container, onSelect) {
   if (!container) return;
   const stars = container.querySelectorAll('.star');
-
-  const paint = (n) => {
-    stars.forEach((s, i) => {
-      s.classList.toggle('filled', i < n);
-    });
-  };
+  const paint = (n) => stars.forEach((s, i) => s.classList.toggle('filled', i < n));
 
   stars.forEach((s) => {
     s.addEventListener('mouseenter', () => paint(+s.dataset.index));
@@ -53,14 +48,23 @@ function initStarRating(container, onSelect) {
       if (onSelect) onSelect(v);
     });
   });
-
   paint(+(container.dataset.value || 0));
 }
 
 /* ---- COMPRESIÓN DE IMAGEN ---- */
+/* Mantiene el formato original (PNG si es PNG, JPEG si es JPEG/foto)
+   Solo convierte a JPEG si el fichero es muy pesado y necesita compresión agresiva */
 function compressImage(file, maxKB = 400) {
   return new Promise((resolve, reject) => {
     const maxBytes = maxKB * 1024;
+
+    /* Si ya cabe, devolver tal cual sin recomprimir */
+    if (file.size <= maxBytes) {
+      const url = URL.createObjectURL(file);
+      resolve({ blob: file, url, size: file.size });
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (e) => {
       const img = new Image();
@@ -68,7 +72,7 @@ function compressImage(file, maxKB = 400) {
         const canvas = document.createElement('canvas');
         let { width, height } = img;
 
-        /* Escala máxima inicial: 1200px en el lado largo */
+        /* Escala: máximo 1200px en el lado largo */
         const MAX_DIM = 1200;
         if (width > MAX_DIM || height > MAX_DIM) {
           if (width > height) { height = Math.round(height * MAX_DIM / width); width = MAX_DIM; }
@@ -80,19 +84,36 @@ function compressImage(file, maxKB = 400) {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
 
-        /* Itera reduciendo calidad hasta cumplir límite */
-        let quality = 0.85;
+        /* Determinar formato de salida:
+           - PNG transparente → mantener PNG
+           - Todo lo demás → JPEG (mejor compresión para fotos) */
+        const isPng = file.type === 'image/png';
+        const mimeType = isPng ? 'image/png' : 'image/jpeg';
+        let quality = isPng ? undefined : 0.85; /* PNG no usa quality */
+
         const tryCompress = () => {
           canvas.toBlob((blob) => {
             if (!blob) return reject(new Error('Error al comprimir'));
-            if (blob.size <= maxBytes || quality <= 0.2) {
+
+            if (blob.size <= maxBytes || (quality !== undefined && quality <= 0.2)) {
               const url = URL.createObjectURL(blob);
-              resolve({ blob, url, size: blob.size });
+              resolve({ blob, url, size: blob.size, isPng });
             } else {
-              quality -= 0.1;
+              /* Solo reducir calidad en JPEG */
+              if (quality !== undefined) quality -= 0.1;
+              else {
+                /* PNG demasiado grande → convertir a JPEG */
+                quality = 0.85;
+                canvas.toBlob((jpegBlob) => {
+                  if (!jpegBlob) return reject(new Error('Error al comprimir'));
+                  const url = URL.createObjectURL(jpegBlob);
+                  resolve({ blob: jpegBlob, url, size: jpegBlob.size, isPng: false });
+                }, 'image/jpeg', 0.85);
+                return;
+              }
               tryCompress();
             }
-          }, 'image/jpeg', quality);
+          }, mimeType, quality);
         };
         tryCompress();
       };
@@ -119,24 +140,18 @@ function elementBadgeHtml(element) {
   return `<span class="element-badge ${e.cls}">${e.label}</span>`;
 }
 
-/* ---- RAREZA → ESTRELLAS ---- */
-function rarityStars(n) {
-  return '⭐'.repeat(parseInt(n) || 0);
-}
+function rarityStars(n) { return '⭐'.repeat(parseInt(n) || 0); }
 
-/* ---- FORMAT DATE ---- */
 function formatDate(iso) {
   if (!iso) return '';
   const d = new Date(iso);
   return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-/* ---- GENERAR ID ÚNICO ---- */
 function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
-/* ---- SLUGIFY (para URLs) ---- */
 function slugify(text) {
   return text.toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
