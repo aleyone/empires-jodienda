@@ -1,3 +1,25 @@
 {
-  "heroes": []
+  "heroes": [
+    {
+      "id": "9ca874f4a85d",
+      "name": "Bane",
+      "element": "holy",
+      "rarity": "3",
+      "family": "Top",
+      "heroClass": "Fighter",
+      "manaSpeed": "Rápido",
+      "power": "440",
+      "attack": "469",
+      "defense": "410",
+      "health": "693",
+      "specialName": "Golpe armónico",
+      "specialDesc": "balblabla",
+      "notes": "Ole",
+      "ratingHard": 5,
+      "ratingCool": 1,
+      "imagePath": "https://raw.githubusercontent.com/aleyone/empires-jodienda/main/img/heroes/1777546398603-062f4cbf.jpg",
+      "createdBy": "david",
+      "createdAt": "2026-04-30T10:53:21.700Z"
+    }
+  ]
 }
