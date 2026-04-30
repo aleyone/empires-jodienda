@@ -8,48 +8,51 @@ async function hashPassword(plain) {
 }
 
 /* ============================================================
-   GITHUB API — leer y escribir ficheros del repo
-   Variables de entorno necesarias en Vercel:
+   GITHUB API
+   Variables de entorno en Vercel:
      GITHUB_TOKEN    — Personal Access Token con scope "repo"
-     GITHUB_OWNER    — tu usuario de GitHub
+     GITHUB_OWNER    — usuario de GitHub (sin @)
      GITHUB_REPO     — nombre del repositorio
      GITHUB_BRANCH   — rama (normalmente "main")
    ============================================================ */
 
-const GH_TOKEN  = process.env.GITHUB_TOKEN;
-const GH_OWNER  = process.env.GITHUB_OWNER;
-const GH_REPO   = process.env.GITHUB_REPO;
-const GH_BRANCH = process.env.GITHUB_BRANCH || 'main';
-const GH_API    = 'https://api.github.com';
+const GH_API = 'https://api.github.com';
+
+function ghHeaders() {
+  return {
+    Authorization: `token ${process.env.GITHUB_TOKEN}`,
+    Accept: 'application/vnd.github.v3+json',
+    'User-Agent': 'mini-kripta-app'
+  };
+}
+
+function repoBase() {
+  return `${GH_API}/repos/${process.env.GITHUB_OWNER}/${process.env.GITHUB_REPO}`;
+}
 
 async function ghGet(path) {
-  const url = `${GH_API}/repos/${GH_OWNER}/${GH_REPO}/contents/${path}?ref=${GH_BRANCH}`;
-  const r = await fetch(url, {
-    headers: {
-      Authorization: `token ${GH_TOKEN}`,
-      Accept: 'application/vnd.github.v3+json'
-    }
-  });
-  if (!r.ok) throw new Error(`GitHub GET ${path} → ${r.status}`);
+  const branch = process.env.GITHUB_BRANCH || 'main';
+  const url = `${repoBase()}/contents/${path}?ref=${branch}`;
+  const r = await fetch(url, { headers: ghHeaders() });
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error(`GitHub GET ${path} → ${r.status}: ${err.message || ''}`);
+  }
   return r.json();
 }
 
-async function ghPut(path, content, message, sha) {
-  const url = `${GH_API}/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`;
+async function ghPut(path, contentBase64, message, sha) {
+  const url  = `${repoBase()}/contents/${path}`;
   const body = {
     message,
-    content: Buffer.from(content).toString('base64'),
-    branch:  GH_BRANCH
+    content: contentBase64,
+    branch:  process.env.GITHUB_BRANCH || 'main'
   };
   if (sha) body.sha = sha;
 
   const r = await fetch(url, {
     method: 'PUT',
-    headers: {
-      Authorization: `token ${GH_TOKEN}`,
-      Accept: 'application/vnd.github.v3+json',
-      'Content-Type': 'application/json'
-    },
+    headers: { ...ghHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
   });
   if (!r.ok) {
@@ -69,7 +72,7 @@ async function readUsers() {
 
 /* ---- Escribir users.json ---- */
 async function writeUsers(users, sha, message = 'update users') {
-  const content = JSON.stringify({ users }, null, 2);
+  const content = Buffer.from(JSON.stringify({ users }, null, 2)).toString('base64');
   return ghPut('data/users.json', content, message, sha);
 }
 
@@ -83,41 +86,44 @@ async function readHeroes() {
 
 /* ---- Escribir heroes.json ---- */
 async function writeHeroes(heroes, sha, message = 'update heroes') {
-  const content = JSON.stringify({ heroes }, null, 2);
+  const content = Buffer.from(JSON.stringify({ heroes }, null, 2)).toString('base64');
   return ghPut('data/heroes.json', content, message, sha);
 }
 
 /* ---- Subir imagen al repo ---- */
 async function uploadImage(filename, buffer) {
-  const path = `img/heroes/${filename}`;
-  /* Intentar obtener SHA si ya existe */
+  const path   = `img/heroes/${filename}`;
+  const branch = process.env.GITHUB_BRANCH || 'main';
   let sha;
   try {
     const existing = await ghGet(path);
     sha = existing.sha;
-  } catch { /* fichero nuevo, sin sha */ }
+  } catch { /* fichero nuevo */ }
 
-  await ghPut(path, buffer.toString('binary'), `upload hero image: ${filename}`, sha);
-  return `/img/heroes/${filename}`;
+  const contentBase64 = buffer.toString('base64');
+  await ghPut(path, contentBase64, `upload hero image: ${filename}`, sha);
+
+  /* URL raw de GitHub — Vercel no sirve ficheros subidos dinámicamente */
+  return `https://raw.githubusercontent.com/${process.env.GITHUB_OWNER}/${process.env.GITHUB_REPO}/${branch}/${path}`;
 }
 
 /* ---- Eliminar fichero del repo ---- */
 async function deleteFile(path, message) {
-  const url = `${GH_API}/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`;
   let sha;
   try {
     const file = await ghGet(path);
     sha = file.sha;
   } catch { return; /* ya no existe */ }
 
+  const url = `${repoBase()}/contents/${path}`;
   await fetch(url, {
     method: 'DELETE',
-    headers: {
-      Authorization: `token ${GH_TOKEN}`,
-      Accept: 'application/vnd.github.v3+json',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ message, sha, branch: GH_BRANCH })
+    headers: { ...ghHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      message,
+      sha,
+      branch: process.env.GITHUB_BRANCH || 'main'
+    })
   });
 }
 
