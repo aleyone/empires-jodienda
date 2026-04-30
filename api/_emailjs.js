@@ -20,7 +20,7 @@ async function sendResetEmail(toEmail, username, resetUrl) {
       to_email:   toEmail,
       to_name:    username,
       reset_url:  resetUrl,
-      app_name:   'Mini Kripta · Empires & Jodienda'
+      app_name:   'Mini Kripta · Empires & Puzzles'
     }
   };
 

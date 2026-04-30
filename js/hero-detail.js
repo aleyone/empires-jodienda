@@ -37,11 +37,11 @@ function renderHero(h) {
   document.getElementById('hero-loading').classList.add('hidden');
   document.getElementById('hero-content').classList.remove('hidden');
 
-  document.title = `${h.name} – Mini Kripta · Empires & Jodienda`;
+  document.title = `${h.name} – Mini Kripta · Empires & Puzzles`;
 
   /* OG tags */
   const base = window.location.origin;
-  setMeta('og-title',       `${h.name} – Mini Kripta · Empires & Jodienda`);
+  setMeta('og-title',       `${h.name} – Mini Kripta · Empires & Puzzles`);
   setMeta('og-description', `${ELEMENT_LABELS[h.element] || ''} · Jodidez: ${'★'.repeat(h.ratingHard||0)} · Mola: ${'★'.repeat(h.ratingCool||0)}`);
   setMeta('og-image',       h.imagePath ? `${base}${h.imagePath}` : '');
   setMeta('og-url',         window.location.href);
@@ -151,7 +151,7 @@ function setMeta(id, content) {
 function shareHero() {
   if (!currentHero) return;
   const url  = window.location.href;
-  const text = `☠️ Nuevo infame en Mini Kripta · Empires & Jodienda:\n*${currentHero.name}*\n${ELEMENT_LABELS[currentHero.element] || ''} · Jodidez: ${'★'.repeat(currentHero.ratingHard||0)}\n${url}`;
+  const text = `☠️ Nuevo infame en Mini Kripta · Empires & Puzzles:\n*${currentHero.name}*\n${ELEMENT_LABELS[currentHero.element] || ''} · Jodidez: ${'★'.repeat(currentHero.ratingHard||0)}\n${url}`;
 
   if (navigator.share) {
     navigator.share({ title: `${currentHero.name} – Mini Kripta`, text, url })

@@ -1,4 +1,4 @@
-# Mini Kripta · Empires & Jodienda 🗡️
+# Mini Kripta · Empires & Puzzles 🗡️
 
 > El bestiario de los infames — Wiki colaborativa de héroes de Empires & Puzzles
 
@@ -91,7 +91,7 @@ En el dashboard de Vercel → tu proyecto → Settings → Environment Variables
 3. Crear template con variables:
    - `{{to_name}}` — nombre del usuario
    - `{{reset_url}}` — enlace de recuperación
-   - `{{app_name}}` — Mini Kripta · Empires & Jodienda
+   - `{{app_name}}` — Mini Kripta · Empires & Puzzles
 
 ### 5. Desplegar
 

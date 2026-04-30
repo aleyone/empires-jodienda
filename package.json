@@ -1,7 +1,7 @@
 {
   "name": "mini-kripta",
   "version": "1.0.0",
-  "description": "Mini Kripta · Empires & Jodienda",
+  "description": "Mini Kripta · Empires & Puzzles",
   "private": true,
   "dependencies": {
     "formidable": "^3.5.1"
