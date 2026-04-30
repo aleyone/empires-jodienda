@@ -1,164 +1,334 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestión de usuarios – Mini Kripta · Empires &amp; Puzzles</title>
-  <link rel="icon" type="image/x-icon" href="/favicon.ico">
-  <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/img/favicon-16.png">
-  <link rel="apple-touch-icon" href="/img/icon-192.png">
-  <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#c9952a">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Mini Kripta">
-  <link rel="stylesheet" href="css/styles.css">
-</head>
-<body>
+/* ============================================================
+   hero-new.js — Formulario de nuevo/editar héroe
+   ============================================================ */
 
-<div class="page-wrapper">
+Auth.requireEditor();
+Auth.initNavbar();
 
-  <!-- NAVBAR -->
-  <nav class="navbar">
-    <div class="container navbar-inner">
-      <a href="index.html" class="navbar-brand" style="text-decoration:none;display:flex;align-items:center;gap:0.75rem;">
-        <img src="/img/logo-48.png" alt="Mini Kripta" style="width:44px;height:44px;object-fit:contain;flex-shrink:0;">
-        <div style="display:flex;align-items:baseline;gap:0.5rem;flex-wrap:nowrap;">
-          <span style="font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:2px;color:var(--gold);text-transform:uppercase;white-space:nowrap;">Empires &amp; Puzzles</span>
-          <span style="color:var(--text-muted);font-size:0.7rem;">·</span>
-          <span style="font-family:'Cinzel',serif;font-size:1.05rem;font-weight:700;color:var(--text-primary);white-space:nowrap;">Mini <span style="color:var(--gold);">Kripta</span></span>
-        </div>
-      </a>
-      <div class="navbar-actions">
-        <a href="index.html" class="btn btn-ghost btn-sm">← Volver</a>
-      </div>
-    </div>
-  </nav>
+const params = new URLSearchParams(window.location.search);
+const editId = params.get('edit');
+const isEdit = !!editId;
 
-  <main>
-    <div class="container" style="max-width:720px;">
+let compressedBlob    = null;
+let existingImagePath = null;
+let allHeroes         = [];
+let duplicateWarned   = false; /* el usuario ya vio el aviso y aceptó continuar */
 
-      <div class="section-header mb-3">
-        <span class="section-title">⚙️ Gestión de usuarios</span>
-        <button class="btn btn-primary btn-sm" id="btn-new-user">+ Nuevo usuario</button>
-      </div>
+/* ---- CARGAR LISTA DE HÉROES PARA VALIDACIÓN ---- */
+async function loadAllHeroes() {
+  try {
+    const res  = await fetch('/api/heroes');
+    const data = await res.json();
+    allHeroes  = data.heroes || [];
+  } catch { allHeroes = []; }
+}
 
-      <!-- TABLA USUARIOS -->
-      <div style="overflow-x:auto;">
-        <table style="width:100%;border-collapse:collapse;" id="users-table">
-          <thead>
-            <tr style="border-bottom:1px solid var(--border-gold);">
-              <th style="text-align:left;padding:0.6rem 0.75rem;font-size:0.78rem;color:var(--text-muted);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;">Usuario</th>
-              <th style="text-align:left;padding:0.6rem 0.75rem;font-size:0.78rem;color:var(--text-muted);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;">Email</th>
-              <th style="text-align:left;padding:0.6rem 0.75rem;font-size:0.78rem;color:var(--text-muted);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;">Rol</th>
-              <th style="text-align:left;padding:0.6rem 0.75rem;font-size:0.78rem;color:var(--text-muted);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;">Estado</th>
-              <th style="text-align:right;padding:0.6rem 0.75rem;font-size:0.78rem;color:var(--text-muted);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;">Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="users-tbody">
-            <!-- Se rellena con JS -->
-          </tbody>
-        </table>
-      </div>
+/* ---- NORMALIZAR NOMBRE (para comparar) ---- */
+function normalizeName(str) {
+  return str.trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ');
+}
 
-    </div>
-  </main>
-</div>
+/* ---- BUSCAR DUPLICADO ---- */
+function findDuplicate(name) {
+  const input = normalizeName(name);
+  if (!input) return null;
 
-<!-- MODAL: Crear / Editar usuario -->
-<div class="modal-backdrop" id="modal-user">
-  <div class="modal">
-    <button class="modal-close" id="close-modal-user">✕</button>
-    <div class="modal-title" id="modal-user-title">Nuevo usuario</div>
-    <form id="user-form" novalidate>
-      <input type="hidden" id="edit-username-original">
+  /* Primero: coincidencia exacta */
+  const exact = allHeroes.find(h => {
+    if (isEdit && h.id === editId) return false;
+    return normalizeName(h.name) === input;
+  });
+  if (exact) return { type: 'exact', hero: exact };
 
-      <div class="form-group">
-        <label class="form-label" for="u-username">Nombre de usuario <span class="required">*</span></label>
-        <input class="form-control" type="text" id="u-username" placeholder="sin espacios, minúsculas" required>
-        <span class="form-error" id="err-u-username"></span>
-      </div>
+  /* Segundo: coincidencia parcial (uno contiene al otro) */
+  const partial = allHeroes.find(h => {
+    if (isEdit && h.id === editId) return false;
+    const existing = normalizeName(h.name);
+    return existing.includes(input) || input.includes(existing);
+  });
+  if (partial) return { type: 'partial', hero: partial };
 
-      <div class="form-group">
-        <label class="form-label" for="u-email">Email</label>
-        <input class="form-control" type="email" id="u-email" placeholder="correo@ejemplo.com">
-      </div>
+  return null;
+}
 
-      <div class="form-group">
-        <label class="form-label" for="u-role">Rol <span class="required">*</span></label>
-        <select class="form-control" id="u-role" required>
-          <option value="consultant">Consultor (solo ver)</option>
-          <option value="editor">Editor (subir y editar héroes)</option>
-          <option value="admin">Admin (control total)</option>
-        </select>
-      </div>
+/* ---- VALIDACIÓN AL SALIR DEL CAMPO (blur) ---- */
+document.getElementById('hero-name').addEventListener('blur', (e) => {
+  duplicateWarned = false;
+  checkNameDuplicate(e.target.value);
+});
 
-      <div class="form-group" id="pass-group">
-        <label class="form-label" for="u-password">Contraseña inicial <span class="required">*</span></label>
-        <input class="form-control" type="password" id="u-password" placeholder="mínimo 6 caracteres">
-        <span class="form-hint">El usuario deberá cambiarla en su primer acceso.</span>
-        <span class="form-error" id="err-u-password"></span>
-      </div>
+/* Limpiar aviso mientras escribe */
+document.getElementById('hero-name').addEventListener('input', () => {
+  const errEl = document.getElementById('err-name');
+  document.getElementById('hero-name').classList.remove('error');
+  errEl.textContent = '';
+  errEl.classList.remove('visible');
+});
 
-      <div class="flex gap-1 mt-2">
-        <button type="button" class="btn btn-ghost flex-1" id="cancel-user-modal">Cancelar</button>
-        <button type="submit" class="btn btn-primary flex-1" id="save-user-btn">Guardar</button>
-      </div>
-    </form>
-  </div>
-</div>
+function checkNameDuplicate(value) {
+  const nameInput  = document.getElementById('hero-name');
+  const errEl      = document.getElementById('err-name');
+  const warnBanner = document.getElementById('duplicate-warning');
 
-<!-- MODAL: Reset contraseña -->
-<div class="modal-backdrop" id="modal-reset-pass">
-  <div class="modal" style="max-width:380px;">
-    <button class="modal-close" id="close-reset-pass">✕</button>
-    <div class="modal-title">🔑 Resetear contraseña</div>
-    <p class="text-secondary mb-2" style="font-size:0.9rem;">
-      Introduce una nueva contraseña para <strong id="reset-username-label"></strong>.
-      El usuario deberá cambiarla en su próximo acceso.
-    </p>
-    <form id="reset-pass-form" novalidate>
-      <input type="hidden" id="reset-target-user">
-      <div class="form-group">
-        <label class="form-label" for="new-pass-admin">Nueva contraseña <span class="required">*</span></label>
-        <input class="form-control" type="password" id="new-pass-admin" placeholder="mínimo 6 caracteres" required>
-        <span class="form-error" id="err-new-pass-admin"></span>
-      </div>
-      <div class="flex gap-1 mt-1">
-        <button type="button" class="btn btn-ghost flex-1" id="cancel-reset-pass">Cancelar</button>
-        <button type="submit" class="btn btn-primary flex-1">Guardar</button>
-      </div>
-    </form>
-  </div>
-</div>
+  /* Limpiar estado previo */
+  nameInput.classList.remove('error');
+  errEl.textContent = '';
+  errEl.classList.remove('visible');
+  if (warnBanner) warnBanner.classList.add('hidden');
 
-<!-- MODAL: Confirmar borrado usuario -->
-<div class="modal-backdrop" id="modal-delete-user">
-  <div class="modal" style="max-width:360px;">
-    <div class="modal-title">⚠️ Eliminar usuario</div>
-    <p class="text-secondary mb-3" style="font-size:0.9rem;">
-      ¿Seguro que quieres eliminar al usuario <strong id="delete-username-label"></strong>?
-    </p>
-    <div class="flex gap-1">
-      <button class="btn btn-ghost flex-1" id="cancel-delete-user">Cancelar</button>
-      <button class="btn btn-danger flex-1" id="confirm-delete-user">Eliminar</button>
-    </div>
-  </div>
-</div>
+  if (!value.trim() || value.trim().length < 2) return;
 
-<div id="toast-container"></div>
+  const match = findDuplicate(value);
+  if (!match) return;
 
-<script src="js/auth.js"></script>
-<script src="js/utils.js"></script>
-<script src="js/admin.js"></script>
-
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js').catch(() => {});
-    });
+  if (match.type === 'exact') {
+    nameInput.classList.add('error');
+    errEl.textContent = `Ya existe un héroe llamado "${match.hero.name}". Cambia el nombre.`;
+    errEl.classList.add('visible');
+  } else {
+    /* Coincidencia parcial → solo modal, sin error inline */
+    nameInput.classList.remove('error');
+    errEl.textContent = '';
+    errEl.classList.remove('visible');
+    showDuplicateModal(match.hero);
   }
-</script>
-</body>
-</html>
+}
+
+/* ---- MODAL DE DUPLICADO PARCIAL ---- */
+function showDuplicateModal(hero) {
+  const modal    = document.getElementById('modal-duplicate');
+  const heroName = document.getElementById('dup-hero-name');
+  const heroImg  = document.getElementById('dup-hero-img');
+  const heroEl   = document.getElementById('dup-hero-element');
+
+  heroName.textContent = hero.name;
+  document.getElementById('dup-hero-name-2').textContent = hero.name;
+
+  const ELEMENT_LABELS = {
+    fire: '🔥 Fuego', ice: '❄️ Hielo', nature: '🌿 Naturaleza',
+    dark: '💜 Oscuridad', holy: '✨ Sagrado'
+  };
+  heroEl.textContent = ELEMENT_LABELS[hero.element] || hero.element || '';
+
+  const noImg = document.getElementById('dup-hero-noimg');
+  if (hero.imagePath) {
+    heroImg.src = hero.imagePath;
+    heroImg.classList.remove('hidden');
+    if (noImg) noImg.style.display = 'none';
+  } else {
+    heroImg.classList.add('hidden');
+    if (noImg) noImg.style.display = 'flex';
+  }
+
+  modal.style.display = 'block';
+}
+
+/* Botón "Es otro héroe, continuar" */
+document.getElementById('dup-continue').addEventListener('click', () => {
+  document.getElementById('modal-duplicate').style.display = 'none';
+  duplicateWarned = true;
+  /* Quitar aviso del campo */
+  document.getElementById('hero-name').classList.remove('error');
+  document.getElementById('err-name').textContent = '';
+  document.getElementById('err-name').classList.remove('visible');
+});
+
+/* Botón "Cancelar, es el mismo" */
+document.getElementById('dup-cancel').addEventListener('click', () => {
+  document.getElementById('modal-duplicate').style.display = 'none';
+  document.getElementById('hero-name').value = '';
+  document.getElementById('hero-name').focus();
+  duplicateWarned = false;
+});
+
+/* ---- CARGA DATOS PARA EDICIÓN ---- */
+if (isEdit) {
+  document.getElementById('form-title').textContent      = 'Editar infame';
+  document.getElementById('submit-btn').textContent      = '💾 Guardar cambios';
+  loadHeroForEdit();
+}
+
+async function loadHeroForEdit() {
+  try {
+    const hero = await HeroesAPI.getById(editId);
+
+    /* Verificar permisos: editor solo puede editar sus propios héroes */
+    if (!Auth.isAdmin() && hero.createdBy !== Auth.getUsername()) {
+      showToast('No puedes editar un héroe de otro usuario', 'error');
+      setTimeout(() => window.location.href = `hero-detail.html?id=${editId}`, 1500);
+      return;
+    }
+
+    existingImagePath = hero.imagePath || null;
+
+    document.getElementById('hero-name').value         = hero.name || '';
+    document.getElementById('hero-element').value      = hero.element || '';
+    document.getElementById('hero-family').value       = hero.family || '';
+    document.getElementById('hero-rarity').value       = hero.rarity || '';
+    document.getElementById('hero-class').value        = hero.heroClass || '';
+    document.getElementById('hero-mana').value         = hero.manaSpeed || '';
+    document.getElementById('hero-power').value        = hero.power || '';
+    document.getElementById('hero-atk').value          = hero.attack || '';
+    document.getElementById('hero-def').value          = hero.defense || '';
+    document.getElementById('hero-hp').value           = hero.health || '';
+    document.getElementById('hero-special-name').value = hero.specialName || '';
+    document.getElementById('hero-special-desc').value = hero.specialDesc || '';
+    document.getElementById('hero-notes').value        = hero.notes || '';
+    document.getElementById('hero-howtobeat').value    = hero.howToBeat || '';
+
+    setRating('rate-hard', hero.ratingHard || 0);
+    setRating('rate-cool', hero.ratingCool || 0);
+
+    if (hero.imagePath) {
+      const preview = document.getElementById('upload-preview');
+      preview.src   = hero.imagePath;
+      preview.classList.add('visible');
+    }
+  } catch (err) {
+    showToast('Error al cargar héroe', 'error');
+  }
+}
+
+function setRating(containerId, value) {
+  const container = document.getElementById(containerId);
+  container.dataset.value = value;
+  container.querySelectorAll('.star').forEach((s, i) => {
+    s.classList.toggle('filled', i < value);
+  });
+}
+
+/* ---- ESTRELLAS INTERACTIVAS ---- */
+initStarRating(document.getElementById('rate-hard'));
+initStarRating(document.getElementById('rate-cool'));
+
+/* ---- UPLOAD DE IMAGEN ---- */
+document.getElementById('hero-image-input').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const progressWrap = document.getElementById('upload-progress');
+  const progressBar  = document.getElementById('progress-bar');
+  const hint         = document.getElementById('img-size-hint');
+  const preview      = document.getElementById('upload-preview');
+
+  progressWrap.classList.remove('hidden');
+  progressBar.style.width = '30%';
+  hint.textContent = 'Comprimiendo imagen...';
+
+  try {
+    const result  = await compressImage(file, 400);
+    compressedBlob = result.blob;
+    compressedBlob._ext = result.isPng ? 'png' : 'jpg';
+
+    progressBar.style.width = '100%';
+    const kb = Math.round(result.size / 1024);
+    hint.textContent = `✓ Imagen lista · ${kb} KB`;
+
+    preview.src = result.url;
+    preview.classList.add('visible');
+
+    setTimeout(() => progressWrap.classList.add('hidden'), 800);
+  } catch (err) {
+    hint.textContent = '⚠️ Error al procesar la imagen';
+    progressWrap.classList.add('hidden');
+  }
+});
+
+/* ---- DRAG & DROP ---- */
+const uploadArea = document.getElementById('upload-area');
+uploadArea.addEventListener('dragover',  (e) => { e.preventDefault(); uploadArea.classList.add('drag-over'); });
+uploadArea.addEventListener('dragleave', ()  => uploadArea.classList.remove('drag-over'));
+uploadArea.addEventListener('drop', (e) => {
+  e.preventDefault();
+  uploadArea.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) {
+    const input = document.getElementById('hero-image-input');
+    const dt    = new DataTransfer();
+    dt.items.add(file);
+    input.files = dt.files;
+    input.dispatchEvent(new Event('change'));
+  }
+});
+
+/* ---- SUBMIT ---- */
+document.getElementById('hero-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const name    = document.getElementById('hero-name').value.trim();
+  const element = document.getElementById('hero-element').value;
+  const rarity  = document.getElementById('hero-rarity').value;
+
+  /* Limpiar errores */
+  document.querySelectorAll('.form-error').forEach(el => {
+    el.textContent = ''; el.classList.remove('visible');
+  });
+
+  let valid = true;
+  if (!name)    { showErr('err-name',    'El nombre es obligatorio'); valid = false; }
+  if (!element) { showErr('err-element', 'Selecciona un elemento');   valid = false; }
+  if (!rarity)  { showErr('err-rarity',  'Selecciona la rareza');     valid = false; }
+
+  /* Validar duplicado exacto en submit también */
+  if (valid && !duplicateWarned) {
+    const match = findDuplicate(name);
+    if (match && match.type === 'exact') {
+      showErr('err-name', `Ya existe un héroe llamado "${match.hero.name}".`);
+      valid = false;
+    } else if (match && match.type === 'partial') {
+      showDuplicateModal(match.hero);
+      return; /* esperar decisión del usuario */
+    }
+  }
+
+  if (!valid) return;
+
+  const heroData = {
+    name,
+    element,
+    rarity,
+    family:      document.getElementById('hero-family').value.trim(),
+    heroClass:   document.getElementById('hero-class').value,
+    manaSpeed:   document.getElementById('hero-mana').value,
+    power:       document.getElementById('hero-power').value,
+    attack:      document.getElementById('hero-atk').value,
+    defense:     document.getElementById('hero-def').value,
+    health:      document.getElementById('hero-hp').value,
+    specialName: document.getElementById('hero-special-name').value.trim(),
+    specialDesc: document.getElementById('hero-special-desc').value.trim(),
+    notes:       document.getElementById('hero-notes').value.trim(),
+    howToBeat:   document.getElementById('hero-howtobeat').value.trim(),
+    ratingHard:  parseInt(document.getElementById('rate-hard').dataset.value) || 0,
+    ratingCool:  parseInt(document.getElementById('rate-cool').dataset.value) || 0,
+  };
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled    = true;
+  btn.textContent = 'Guardando...';
+
+  try {
+    if (isEdit) {
+      await HeroesAPI.update(editId, heroData, compressedBlob);
+      showToast('¡Infame actualizado!', 'success');
+      setTimeout(() => window.location.href = `hero-detail.html?id=${editId}`, 1000);
+    } else {
+      const result = await HeroesAPI.create(heroData, compressedBlob);
+      showToast('¡Infame añadido al bestiario!', 'success');
+      setTimeout(() => window.location.href = `hero-detail.html?id=${result.id}`, 1000);
+    }
+  } catch (err) {
+    showToast(err.message, 'error');
+    btn.disabled    = false;
+    btn.textContent = isEdit ? '💾 Guardar cambios' : '⚔ Añadir infame';
+  }
+});
+
+function showErr(id, msg) {
+  const el = document.getElementById(id);
+  if (el) { el.textContent = msg; el.classList.add('visible'); }
+}
+
+/* ---- INIT ---- */
+loadAllHeroes();
