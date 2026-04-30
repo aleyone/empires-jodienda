@@ -1,128 +1,132 @@
 /* ============================================================
-   index.js — Página principal: listado, filtros, búsqueda
+   heroes.js — Capa de acceso a datos de héroes
    ============================================================ */
 
-Auth.requireAuth();
-Auth.initNavbar();
+const HeroesAPI = (() => {
 
-let allHeroes = [];
-let filters = {
-  element: 'all',
-  family:  'all',
-  search:  '',
-  sort:    'newest'
-};
-
-/* ---- CARGA INICIAL ---- */
-async function loadHeroes() {
-  try {
-    allHeroes = await HeroesAPI.getAll();
-    buildFamilyFilter();
-    applyFilters();
-    const tc = document.getElementById('total-count');
-    if (tc) tc.textContent = allHeroes.length;
-  } catch (err) {
-    showToast('Error al cargar héroes', 'error');
-    console.error(err);
-  }
-}
-
-/* ---- CONSTRUYE EL SELECT DE FAMILIAS ---- */
-function buildFamilyFilter() {
-  const families = [...new Set(allHeroes.map(h => h.family).filter(Boolean))].sort();
-  const sel = document.getElementById('filter-family');
-  sel.innerHTML = '<option value="all">Todas</option>';
-  families.forEach(f => {
-    const opt = document.createElement('option');
-    opt.value = f;
-    opt.textContent = f;
-    sel.appendChild(opt);
-  });
-}
-
-/* ---- APLICA FILTROS Y RENDERIZA ---- */
-function applyFilters() {
-  let heroes = [...allHeroes];
-
-  /* Filtro elemento */
-  if (filters.element !== 'all') {
-    heroes = heroes.filter(h => h.element === filters.element);
+  /* Devuelve todos los héroes */
+  async function getAll() {
+    const res = await fetch('/api/heroes');
+    if (!res.ok) throw new Error('Error al cargar héroes');
+    const data = await res.json();
+    return data.heroes || [];
   }
 
-  /* Filtro familia */
-  if (filters.family !== 'all') {
-    heroes = heroes.filter(h => h.family === filters.family);
+  /* Devuelve un héroe por ID */
+  async function getById(id) {
+    const res = await fetch(`/api/heroes/${id}`);
+    if (!res.ok) throw new Error('Héroe no encontrado');
+    return res.json();
   }
 
-  /* Búsqueda por nombre */
-  if (filters.search) {
-    const q = filters.search.toLowerCase();
-    heroes = heroes.filter(h => h.name.toLowerCase().includes(q));
+  /* Crea un héroe nuevo (multipart: imagen + JSON) */
+  async function create(heroData, imageBlob) {
+    const session = Auth.getSession();
+    const formData = new FormData();
+    formData.append('data', JSON.stringify(heroData));
+    if (imageBlob) formData.append('image', imageBlob, 'hero.' + (imageBlob._ext || 'jpg'));
+
+    const res = await fetch('/api/heroes', {
+      method: 'POST',
+      headers: { 'x-username': session.username },
+      body: formData
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Error al crear héroe');
+    }
+    return res.json();
   }
 
-  /* Ordenación */
-  switch (filters.sort) {
-    case 'hardest':  heroes.sort((a,b) => (b.ratingHard||0) - (a.ratingHard||0)); break;
-    case 'easiest':  heroes.sort((a,b) => (a.ratingHard||0) - (b.ratingHard||0)); break;
-    case 'coolest':  heroes.sort((a,b) => (b.ratingCool||0) - (a.ratingCool||0)); break;
-    case 'lamest':   heroes.sort((a,b) => (a.ratingCool||0) - (b.ratingCool||0)); break;
-    case 'name':     heroes.sort((a,b) => a.name.localeCompare(b.name, 'es')); break;
-    case 'newest':
-    default:
-      heroes.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+  /* Actualiza un héroe */
+  async function update(id, heroData, imageBlob) {
+    const session = Auth.getSession();
+    const formData = new FormData();
+    formData.append('data', JSON.stringify(heroData));
+    if (imageBlob) formData.append('image', imageBlob, 'hero.' + (imageBlob._ext || 'jpg'));
+
+    const res = await fetch(`/api/heroes/${id}`, {
+      method: 'PUT',
+      headers: { 'x-username': session.username },
+      body: formData
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Error al actualizar héroe');
+    }
+    return res.json();
   }
 
-  renderHeroes(heroes);
-}
-
-/* ---- RENDER ---- */
-function renderHeroes(heroes) {
-  const grid  = document.getElementById('heroes-grid');
-  const empty = document.getElementById('empty-state');
-  const count = document.getElementById('hero-count');
-
-  if (!heroes.length) {
-    grid.innerHTML = '';
-    empty.classList.remove('hidden');
-    count.textContent = 'Ningún infame encontrado';
-    return;
+  /* Elimina un héroe */
+  async function remove(id) {
+    const session = Auth.getSession();
+    const res = await fetch(`/api/heroes/${id}`, {
+      method: 'DELETE',
+      headers: { 'x-username': session.username }
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Error al eliminar héroe');
+    }
+    return res.json();
   }
 
-  empty.classList.add('hidden');
-  count.textContent = `${heroes.length} ${heroes.length === 1 ? 'infame' : 'infames'}`;
-  grid.innerHTML = heroes.map(HeroesAPI.renderCard).join('');
-}
+  /* Renderiza una card de héroe */
+  function renderCard(hero) {
+    const elementMap = {
+      fire:   { label: '🔥 Fuego',      cls: 'element-fire'   },
+      ice:    { label: '❄️ Hielo',       cls: 'element-ice'    },
+      nature: { label: '🌿 Naturaleza',  cls: 'element-nature' },
+      dark:   { label: '💜 Oscuridad',   cls: 'element-dark'   },
+      holy:   { label: '✨ Sagrado',     cls: 'element-holy'   }
+    };
+    const el = elementMap[hero.element] || { label: hero.element, cls: '' };
 
-/* ---- EVENTOS: FILTROS DE ELEMENTO ---- */
-document.querySelectorAll('[data-filter="element"]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('[data-filter="element"]').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    filters.element = btn.dataset.value;
-    applyFilters();
-  });
-});
+    const img = hero.imagePath
+      ? `<img class="hero-card-image" src="${hero.imagePath}" alt="${hero.name}" loading="lazy">`
+      : `<div class="hero-card-image-placeholder">⚔</div>`;
 
-/* ---- EVENTOS: FAMILIA Y SORT ---- */
-document.getElementById('filter-family').addEventListener('change', (e) => {
-  filters.family = e.target.value;
-  applyFilters();
-});
+    const hardStars  = renderStarsHtml(hero.ratingHard || 0, 'red');
+    const coolStars  = renderStarsHtml(hero.ratingCool || 0, 'gold');
 
-document.getElementById('sort-by').addEventListener('change', (e) => {
-  filters.sort = e.target.value;
-  applyFilters();
-});
+    return `
+      <div class="hero-card" onclick="window.location.href='hero-detail.html?id=${hero.id}'">
+        ${img}
+        <div class="hero-card-body">
+          <div class="hero-card-name">${escapeHtml(hero.name)}</div>
+          <div class="hero-card-meta">
+            <span class="element-badge ${el.cls}">${el.label}</span>
+            ${hero.family ? `<span class="badge role-badge">${escapeHtml(hero.family)}</span>` : ''}
+          </div>
+          <div class="hero-card-footer">
+            <div title="Qué jodido es" style="display:flex;gap:1px;">${hardStars}</div>
+            <div title="Qué mola" style="display:flex;gap:1px;">${coolStars}</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.4rem;padding-top:0.4rem;border-top:1px solid var(--border-subtle);">
+            <span style="font-size:0.7rem;color:var(--text-muted);">${escapeHtml(hero.createdBy||'')}</span>
+            <span style="font-size:0.7rem;color:var(--text-muted);">${hero.createdAt ? new Date(hero.createdAt).toLocaleDateString('es-ES',{day:'2-digit',month:'short'}) : ''}</span>
+          </div>
+        </div>
+      </div>`;
+  }
 
-/* ---- BÚSQUEDA ---- */
-let searchTimer;
-document.getElementById('search-input').addEventListener('input', (e) => {
-  clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => {
-    filters.search = e.target.value.trim();
-    applyFilters();
-  }, 250);
-});
+  function renderStarsHtml(value, type) {
+    let html = '';
+    for (let i = 1; i <= 5; i++) {
+      const cls = i <= value ? (type === 'red' ? 'filled-red' : 'filled') : '';
+      html += `<span class="star stars-sm ${cls}" style="cursor:default;">★</span>`;
+    }
+    return html;
+  }
 
-/* ---- INIT ---- */
-loadHeroes();
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  return { getAll, getById, create, update, remove, renderCard };
+
+})();

@@ -1,142 +1,160 @@
 /* ============================================================
-   auth.js — Gestión de sesión y roles
-   Sesión persiste mientras el navegador esté abierto.
-   Se destruye al hacer logout o al cerrar el navegador.
+   utils.js — Utilidades compartidas
    ============================================================ */
 
-const Auth = (() => {
+/* ---- TOAST ---- */
+function showToast(msg, type = 'info', duration = 3000) {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  container.appendChild(t);
+  setTimeout(() => t.remove(), duration);
+}
 
-  const SESSION_KEY = 'mk_session';
+/* ---- SHA-256 ---- */
+async function sha256(message) {
+  const msgBuffer = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray  = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
 
-  /* Usamos sessionStorage (muere al cerrar pestaña/navegador)
-     pero lo sincronizamos con localStorage para que sobreviva
-     entre pestañas del mismo navegador mientras esté abierto */
-  function getSession() {
-    try {
-      /* Intentar sessionStorage primero */
-      let raw = sessionStorage.getItem(SESSION_KEY);
-      if (!raw) {
-        /* Recuperar de localStorage si hay sesión activa en otra pestaña */
-        raw = localStorage.getItem(SESSION_KEY);
-        if (raw) sessionStorage.setItem(SESSION_KEY, raw);
-      }
-      return raw ? JSON.parse(raw) : null;
-    } catch { return null; }
+/* ---- ESTRELLAS ---- */
+function renderStarsReadonly(container, value, type = 'gold') {
+  if (!container) return;
+  container.innerHTML = '';
+  for (let i = 1; i <= 5; i++) {
+    const s = document.createElement('span');
+    s.className = 'star' + (i <= value ? (type === 'red' ? ' filled-red' : ' filled') : '');
+    s.textContent = '★';
+    container.appendChild(s);
   }
+}
 
-  function setSession(user) {
-    const data = JSON.stringify({
-      username: user.username,
-      role:     user.role,
-      email:    user.email || ''
+function initStarRating(container, onSelect) {
+  if (!container) return;
+  const stars = container.querySelectorAll('.star');
+  const paint = (n) => stars.forEach((s, i) => s.classList.toggle('filled', i < n));
+
+  stars.forEach((s) => {
+    s.addEventListener('mouseenter', () => paint(+s.dataset.index));
+    s.addEventListener('mouseleave', () => paint(+(container.dataset.value || 0)));
+    s.addEventListener('click', () => {
+      const v = +s.dataset.index;
+      container.dataset.value = v;
+      paint(v);
+      if (onSelect) onSelect(v);
     });
-    sessionStorage.setItem(SESSION_KEY, data);
-    localStorage.setItem(SESSION_KEY, data);
+  });
+  paint(+(container.dataset.value || 0));
+}
 
-    /* Registrar que hay una sesión activa en esta pestaña */
-    _registerTab();
-  }
+/* ---- COMPRESIÓN DE IMAGEN ---- */
+/* Mantiene el formato original (PNG si es PNG, JPEG si es JPEG/foto)
+   Solo convierte a JPEG si el fichero es muy pesado y necesita compresión agresiva */
+function compressImage(file, maxKB = 400) {
+  return new Promise((resolve, reject) => {
+    const maxBytes = maxKB * 1024;
 
-  function clearSession() {
-    sessionStorage.removeItem(SESSION_KEY);
-    localStorage.removeItem(SESSION_KEY);
-    localStorage.removeItem('mk_tabs');
-  }
-
-  /* ---- Control de pestañas abiertas ---- */
-  function _registerTab() {
-    const tabId = sessionStorage.getItem('mk_tab_id') || Math.random().toString(36).slice(2);
-    sessionStorage.setItem('mk_tab_id', tabId);
-    const tabs = JSON.parse(localStorage.getItem('mk_tabs') || '[]');
-    if (!tabs.includes(tabId)) tabs.push(tabId);
-    localStorage.setItem('mk_tabs', JSON.stringify(tabs));
-  }
-
-  function _unregisterTab() {
-    const tabId = sessionStorage.getItem('mk_tab_id');
-    if (!tabId) return;
-    let tabs = JSON.parse(localStorage.getItem('mk_tabs') || '[]');
-    tabs = tabs.filter(t => t !== tabId);
-    localStorage.setItem('mk_tabs', JSON.stringify(tabs));
-    /* Si no quedan pestañas abiertas, destruir la sesión */
-    if (tabs.length === 0) {
-      localStorage.removeItem(SESSION_KEY);
-      localStorage.removeItem('mk_tabs');
-    }
-  }
-
-  /* Limpiar sesión al cerrar la pestaña */
-  window.addEventListener('beforeunload', _unregisterTab);
-
-  /* ---- API pública ---- */
-  function isLoggedIn() { return !!getSession(); }
-  function getRole()     { return getSession()?.role || null; }
-  function getUsername() { return getSession()?.username || null; }
-  function isAdmin()     { return getRole() === 'admin'; }
-  function isEditor()    { return getRole() === 'editor' || isAdmin(); }
-  function canEdit()     { return isEditor(); }
-
-  function requireAuth() {
-    if (!isLoggedIn()) {
-      const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
-      window.location.href = `login.html?returnUrl=${returnUrl}`;
-      return false;
-    }
-    _registerTab();
-    return true;
-  }
-
-  function requireAdmin() {
-    if (!requireAuth()) return false;
-    if (!isAdmin()) { window.location.href = 'index.html'; return false; }
-    return true;
-  }
-
-  function requireEditor() {
-    if (!requireAuth()) return false;
-    if (!canEdit()) { window.location.href = 'index.html'; return false; }
-    return true;
-  }
-
-  function initNavbar() {
-    const session = getSession();
-    if (!session) return;
-
-    const avatar    = document.getElementById('nav-avatar');
-    const username  = document.getElementById('nav-username');
-    const menuBtn   = document.getElementById('nav-menu-btn');
-    const menu      = document.getElementById('navbar-menu');
-    const menuAdmin = document.getElementById('menu-admin');
-    const btnAdd    = document.getElementById('btn-add-hero');
-    const btnLogout = document.getElementById('btn-logout');
-
-    if (avatar)   avatar.textContent = session.username.charAt(0).toUpperCase();
-    if (username) username.textContent = session.username;
-    if (menuAdmin && isAdmin()) menuAdmin.style.display = 'block';
-    if (btnAdd && canEdit())    btnAdd.style.display = 'inline-flex';
-
-    if (menuBtn && menu) {
-      menuBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        menu.classList.toggle('open');
-      });
-      document.addEventListener('click', () => menu.classList.remove('open'));
+    /* Si ya cabe, devolver tal cual sin recomprimir */
+    if (file.size <= maxBytes) {
+      const url = URL.createObjectURL(file);
+      resolve({ blob: file, url, size: file.size });
+      return;
     }
 
-    if (btnLogout) {
-      btnLogout.addEventListener('click', () => {
-        clearSession();
-        window.location.href = 'login.html';
-      });
-    }
-  }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let { width, height } = img;
 
-  return {
-    getSession, setSession, clearSession,
-    isLoggedIn, getRole, getUsername,
-    isAdmin, isEditor, canEdit,
-    requireAuth, requireAdmin, requireEditor,
-    initNavbar
-  };
+        /* Escala: máximo 1200px en el lado largo */
+        const MAX_DIM = 1200;
+        if (width > MAX_DIM || height > MAX_DIM) {
+          if (width > height) { height = Math.round(height * MAX_DIM / width); width = MAX_DIM; }
+          else { width = Math.round(width * MAX_DIM / height); height = MAX_DIM; }
+        }
 
-})();
+        canvas.width  = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        /* Determinar formato de salida:
+           - PNG transparente → mantener PNG
+           - Todo lo demás → JPEG (mejor compresión para fotos) */
+        const isPng = file.type === 'image/png';
+        const mimeType = isPng ? 'image/png' : 'image/jpeg';
+        let quality = isPng ? undefined : 0.85; /* PNG no usa quality */
+
+        const tryCompress = () => {
+          canvas.toBlob((blob) => {
+            if (!blob) return reject(new Error('Error al comprimir'));
+
+            if (blob.size <= maxBytes || (quality !== undefined && quality <= 0.2)) {
+              const url = URL.createObjectURL(blob);
+              resolve({ blob, url, size: blob.size, isPng });
+            } else {
+              /* Solo reducir calidad en JPEG */
+              if (quality !== undefined) quality -= 0.1;
+              else {
+                /* PNG demasiado grande → convertir a JPEG */
+                quality = 0.85;
+                canvas.toBlob((jpegBlob) => {
+                  if (!jpegBlob) return reject(new Error('Error al comprimir'));
+                  const url = URL.createObjectURL(jpegBlob);
+                  resolve({ blob: jpegBlob, url, size: jpegBlob.size, isPng: false });
+                }, 'image/jpeg', 0.85);
+                return;
+              }
+              tryCompress();
+            }
+          }, mimeType, quality);
+        };
+        tryCompress();
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ---- ELEMENTO → EMOJI y LABEL ---- */
+const ELEMENT_MAP = {
+  fire:   { label: '🔥 Fuego',       cls: 'element-fire'   },
+  ice:    { label: '❄️ Hielo',        cls: 'element-ice'    },
+  nature: { label: '🌿 Naturaleza',   cls: 'element-nature' },
+  dark:   { label: '💜 Oscuridad',    cls: 'element-dark'   },
+  holy:   { label: '✨ Sagrado',      cls: 'element-holy'   }
+};
+
+function elementBadgeHtml(element) {
+  const e = ELEMENT_MAP[element];
+  if (!e) return '';
+  return `<span class="element-badge ${e.cls}">${e.label}</span>`;
+}
+
+function rarityStars(n) { return '⭐'.repeat(parseInt(n) || 0); }
+
+function formatDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+function slugify(text) {
+  return text.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}

@@ -1,200 +1,273 @@
-/* api/heroes.js — CRUD de héroes
-   Vercel: bodyParser desactivado para recibir multipart correctamente
+/* api/users.js — Gestión de usuarios
+   Rutas (detectadas por req.url):
+     GET    /api/users                     → lista (solo admin)
+     POST   /api/users                     → crear usuario (solo admin)
+     PUT    /api/users?username=xxx        → editar usuario (solo admin)
+     DELETE /api/users?username=xxx        → eliminar (solo admin)
+     POST   /api/users/first-login         → cambiar pass + email primer acceso
+     POST   /api/users/change-password     → usuario cambia su propia contraseña
+     POST   /api/users/reset-password      → admin resetea contraseña
+     POST   /api/users/forgot-password     → solicitar reset por email
 */
 
-const { readHeroes, writeHeroes, uploadImage, deleteFile, checkRole } = require('./_helpers');
-const formidable = require('formidable');
-const fs         = require('fs');
-const crypto     = require('crypto');
+const { readUsers, writeUsers, checkRole, hashPassword } = require('./_helpers');
+const emailjs = require('./_emailjs');
 
-/* Desactivar bodyParser de Vercel — obligatorio para multipart/form-data */
-module.exports = handler;
-module.exports.config = { api: { bodyParser: false } };
-
-async function handler(req, res) {
+module.exports = async (req, res) => {
+  /* Cabeceras CORS por si acaso */
   res.setHeader('Content-Type', 'application/json');
-  const { id } = req.query;
 
-  /* Comentarios — acción especial */
-  if (req.query.action === 'comment') {
-    return handleComment(req, res, id);
-  }
+  const url      = (req.url || '').split('?')[0]; /* sin query string */
+  const { username } = req.query;
 
   try {
+
+    /* ---- Rutas especiales (no requieren admin) ---- */
+    if (url.endsWith('/first-login')) {
+      return handleFirstLogin(req, res);
+    }
+    if (url.endsWith('/change-password')) {
+      return handleChangePassword(req, res);
+    }
+    if (url.endsWith('/forgot-password')) {
+      return handleForgotPassword(req, res);
+    }
+
+    /* ---- Reset password (requiere admin) ---- */
+    if (url.endsWith('/reset-password')) {
+      return handleResetPassword(req, res);
+    }
+    if (url.endsWith('/reset-password-token')) {
+      return handleResetPasswordToken(req, res);
+    }
+
+    /* ---- CRUD usuarios (solo admin) ---- */
+    if (!(await checkRole(req, 'admin'))) {
+      return res.status(403).json({ error: 'Sin permisos de administrador' });
+    }
+
     switch (req.method) {
 
       case 'GET': {
-        const { heroes } = await readHeroes();
-        if (id) {
-          const hero = heroes.find(h => h.id === id);
-          if (!hero) return res.status(404).json({ error: 'Héroe no encontrado' });
-          return res.status(200).json(hero);
-        }
-        return res.status(200).json({ heroes });
+        const { users } = await readUsers();
+        const safe = users.map(u => ({
+          username:   u.username,
+          email:      u.email || '',
+          role:       u.role,
+          firstLogin: u.firstLogin || false,
+          createdAt:  u.createdAt
+        }));
+        return res.status(200).json({ users: safe });
       }
 
       case 'POST': {
-        if (!(await checkRole(req, 'editor'))) {
-          return res.status(403).json({ error: 'Sin permisos' });
+        const { username: newUser, email, role, password } = req.body || {};
+        if (!newUser || !password || !role) {
+          return res.status(400).json({ error: 'Faltan datos obligatorios' });
         }
-        const { heroData, imageBuffer, imageExt } = await parseMultipart(req);
-
-        let imagePath = null;
-        if (imageBuffer && imageBuffer.length > 0) {
-          const filename = `${Date.now()}-${crypto.randomBytes(4).toString('hex')}.${imageExt}`;
-          imagePath = await uploadImage(filename, imageBuffer);
-          await delay(2000);
+        if (!/^[a-z0-9_]+$/i.test(newUser)) {
+          return res.status(400).json({ error: 'Nombre de usuario no válido' });
         }
-
-        const { heroes, sha } = await readHeroes();
-        const newHero = {
-          id:        crypto.randomBytes(6).toString('hex'),
-          ...heroData,
-          imagePath,
-          createdBy: req.headers['x-username'] || 'unknown',
-          createdAt: new Date().toISOString()
-        };
-        heroes.push(newHero);
-        await writeHeroes(heroes, sha, `add hero: ${newHero.name}`);
-        return res.status(201).json(newHero);
+        const { users, sha } = await readUsers();
+        if (users.find(u => u.username === newUser.toLowerCase())) {
+          return res.status(409).json({ error: 'El nombre de usuario ya existe' });
+        }
+        const hash = await hashPassword(password);
+        users.push({
+          username:     newUser.toLowerCase(),
+          passwordHash: hash,
+          email:        email || '',
+          role,
+          firstLogin:   true,
+          createdAt:    new Date().toISOString()
+        });
+        await writeUsers(users, sha, `add user: ${newUser}`);
+        return res.status(201).json({ ok: true });
       }
 
       case 'PUT': {
-        if (!id) return res.status(400).json({ error: 'id requerido' });
-        if (!(await checkRole(req, 'editor'))) {
-          return res.status(403).json({ error: 'Sin permisos' });
+        if (!username) return res.status(400).json({ error: 'username requerido' });
+        const { username: newName, email, role } = req.body || {};
+        const { users, sha } = await readUsers();
+        const idx = users.findIndex(u => u.username === username);
+        if (idx === -1) return res.status(404).json({ error: 'Usuario no encontrado' });
+        if (newName && newName !== username) {
+          if (users.find(u => u.username === newName.toLowerCase())) {
+            return res.status(409).json({ error: 'El nombre ya está en uso' });
+          }
+          users[idx].username = newName.toLowerCase();
         }
-        const { heroData, imageBuffer, imageExt } = await parseMultipart(req);
-        const { heroes, sha } = await readHeroes();
-        const idx = heroes.findIndex(h => h.id === id);
-        if (idx === -1) return res.status(404).json({ error: 'Héroe no encontrado' });
-        /* Editors can only edit their own heroes */
-        const callerPut = req.headers['x-username'];
-        const isAdminPut = await checkRole(req, 'admin');
-        if (!isAdminPut && heroes[idx].createdBy !== callerPut) {
-          return res.status(403).json({ error: 'Solo puedes editar tus propios héroes' });
-        }
-
-        let imagePath = heroes[idx].imagePath;
-        if (imageBuffer && imageBuffer.length > 0) {
-          const filename = `${Date.now()}-${crypto.randomBytes(4).toString('hex')}.${imageExt}`;
-          imagePath = await uploadImage(filename, imageBuffer);
-          await delay(2000);
-        }
-
-        heroes[idx] = {
-          ...heroes[idx],
-          ...heroData,
-          imagePath,
-          updatedAt: new Date().toISOString(),
-          updatedBy: req.headers['x-username'] || 'unknown'
-        };
-        await writeHeroes(heroes, sha, `update hero: ${heroes[idx].name}`);
-        return res.status(200).json(heroes[idx]);
+        if (email !== undefined) users[idx].email = email;
+        if (role) users[idx].role = role;
+        await writeUsers(users, sha, `update user: ${username}`);
+        return res.status(200).json({ ok: true });
       }
 
       case 'DELETE': {
-        if (!id) return res.status(400).json({ error: 'id requerido' });
-        if (!(await checkRole(req, 'editor'))) {
-          return res.status(403).json({ error: 'Sin permisos' });
+        if (!username) return res.status(400).json({ error: 'username requerido' });
+        const callerUsername = req.headers['x-username'];
+        if (username === callerUsername) {
+          return res.status(400).json({ error: 'No puedes eliminarte a ti mismo' });
         }
-        const { heroes, sha } = await readHeroes();
-        const idx = heroes.findIndex(h => h.id === id);
-        if (idx === -1) return res.status(404).json({ error: 'Héroe no encontrado' });
-        /* Editors can only delete their own heroes */
-        const callerDel = req.headers['x-username'];
-        const isAdminDel = await checkRole(req, 'admin');
-        if (!isAdminDel && heroes[idx].createdBy !== callerDel) {
-          return res.status(403).json({ error: 'Solo puedes eliminar tus propios héroes' });
+        const { users, sha } = await readUsers();
+        const filtered = users.filter(u => u.username !== username);
+        if (filtered.length === users.length) {
+          return res.status(404).json({ error: 'Usuario no encontrado' });
         }
-
-        const hero = heroes[idx];
-        if (hero.imagePath) {
-          await deleteFile(
-            hero.imagePath.replace(/^.*githubusercontent\.com\/[^/]+\/[^/]+\/[^/]+\//, ''),
-            `delete image: ${hero.name}`
-          ).catch(() => {});
-        }
-        heroes.splice(idx, 1);
-        await writeHeroes(heroes, sha, `delete hero: ${hero.name}`);
+        await writeUsers(filtered, sha, `delete user: ${username}`);
         return res.status(200).json({ ok: true });
       }
 
       default:
         return res.status(405).json({ error: 'Method not allowed' });
     }
+
   } catch (err) {
-    console.error('[heroes.js]', err.message, err.stack);
+    console.error('[users.js]', err);
     return res.status(500).json({ error: err.message || 'Error interno' });
   }
-}
+};
 
-/* ---- Parsear multipart ---- */
-function parseMultipart(req) {
-  return new Promise((resolve, reject) => {
-    const form = new formidable.Formidable({
-      maxFileSize:    500 * 1024,
-      keepExtensions: true
-    });
-
-    form.parse(req, (err, fields, files) => {
-      if (err) return reject(err);
-
-      let heroData = {};
-      try {
-        const raw = Array.isArray(fields.data) ? fields.data[0] : fields.data;
-        heroData = JSON.parse(raw || '{}');
-      } catch (e) {
-        console.error('Error parsing heroData JSON:', e);
-      }
-
-      let imageBuffer = null;
-      let imageExt    = 'jpg';
-      const imgFile   = files.image
-        ? (Array.isArray(files.image) ? files.image[0] : files.image)
-        : null;
-
-      if (imgFile && imgFile.size > 0) {
-        try {
-          imageBuffer = fs.readFileSync(imgFile.filepath || imgFile.path);
-          const originalName = imgFile.originalFilename || imgFile.name || 'hero.jpg';
-          imageExt = originalName.split('.').pop().toLowerCase() || 'jpg';
-          if (!['jpg', 'jpeg', 'png', 'webp'].includes(imageExt)) imageExt = 'jpg';
-          console.log(`[heroes] image received: ${originalName}, size: ${imageBuffer.length}, ext: ${imageExt}`);
-        } catch (e) {
-          console.error('Error reading image file:', e);
-        }
-      }
-
-      resolve({ heroData, imageBuffer, imageExt });
-    });
-  });
-}
-
-function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-/* ---- Endpoint comentarios: POST /api/heroes/:id/comment ---- */
-/* Se accede via rewrite /api/heroes/:id/comment → /api/heroes?id=:id&action=comment */
-async function handleComment(req, res, id) {
+/* ---- Primer acceso: guardar email + nueva contraseña ---- */
+async function handleFirstLogin(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  const username = req.headers['x-username'];
-  if (!username) return res.status(401).json({ error: 'No autenticado' });
+  const { username, email, newPassword } = req.body || {};
+  if (!username || !email || !newPassword) {
+    return res.status(400).json({ error: 'Faltan datos' });
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ error: 'Email no válido' });
+  }
+  if (newPassword.length < 6) {
+    return res.status(400).json({ error: 'Contraseña demasiado corta' });
+  }
+  const { users, sha } = await readUsers();
+  const idx = users.findIndex(u => u.username === username.toLowerCase());
+  if (idx === -1) return res.status(404).json({ error: 'Usuario no encontrado' });
 
-  const { text } = req.body || {};
-  if (!text || !text.trim()) return res.status(400).json({ error: 'Comentario vacío' });
+  users[idx].email        = email;
+  users[idx].passwordHash = await hashPassword(newPassword);
+  users[idx].firstLogin   = false;
 
-  const { heroes, sha } = await readHeroes();
-  const idx = heroes.findIndex(h => h.id === id);
-  if (idx === -1) return res.status(404).json({ error: 'Héroe no encontrado' });
+  await writeUsers(users, sha, `first login: ${username}`);
+  return res.status(200).json({ ok: true });
+}
 
-  if (!heroes[idx].comments) heroes[idx].comments = [];
-  heroes[idx].comments.push({
-    id:        require('crypto').randomBytes(4).toString('hex'),
-    author:    username,
-    text:      text.trim(),
-    createdAt: new Date().toISOString()
-  });
+/* ---- Usuario cambia su propia contraseña ---- */
+async function handleChangePassword(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  const callerUsername = req.headers['x-username'];
+  if (!callerUsername) return res.status(401).json({ error: 'No autenticado' });
 
-  await writeHeroes(heroes, sha, `comment on hero: ${heroes[idx].name}`);
-  return res.status(200).json(heroes[idx]);
+  const { currentPassword, newPassword } = req.body || {};
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'Faltan datos' });
+  }
+  if (newPassword.length < 6) {
+    return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 6 caracteres' });
+  }
+
+  const { users, sha } = await readUsers();
+  const idx = users.findIndex(u => u.username === callerUsername);
+  if (idx === -1) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+  const currentHash = await hashPassword(currentPassword);
+  if (users[idx].passwordHash !== currentHash) {
+    return res.status(401).json({ error: 'La contraseña actual no es correcta' });
+  }
+
+  users[idx].passwordHash = await hashPassword(newPassword);
+  await writeUsers(users, sha, `change password: ${callerUsername}`);
+  return res.status(200).json({ ok: true });
+}
+
+/* ---- Admin resetea contraseña de un usuario ---- */
+async function handleResetPassword(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (!(await checkRole(req, 'admin'))) {
+    return res.status(403).json({ error: 'Sin permisos' });
+  }
+  const { targetUsername, newPassword } = req.body || {};
+  if (!targetUsername || !newPassword || newPassword.length < 6) {
+    return res.status(400).json({ error: 'Datos incorrectos' });
+  }
+  const { users, sha } = await readUsers();
+  const idx = users.findIndex(u => u.username === targetUsername);
+  if (idx === -1) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+  users[idx].passwordHash = await hashPassword(newPassword);
+  users[idx].firstLogin   = true; /* Le obliga a cambiarla en el próximo acceso */
+
+  await writeUsers(users, sha, `reset password: ${targetUsername}`);
+  return res.status(200).json({ ok: true });
+}
+
+/* ---- Olvidé contraseña: envía email ---- */
+async function handleForgotPassword(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  const { usernameOrEmail } = req.body || {};
+  if (!usernameOrEmail) return res.status(200).json({ ok: true });
+
+  try {
+    const { users } = await readUsers();
+    const input = usernameOrEmail.toLowerCase().trim();
+    /* Buscar por username O por email */
+    const user = users.find(u =>
+      u.username === input ||
+      (u.email && u.email.toLowerCase() === input)
+    );
+    if (user && user.email) {
+      const token    = require('crypto').randomBytes(20).toString('hex');
+      const resetUrl = `${process.env.APP_URL || ''}/reset-password.html?token=${token}&user=${encodeURIComponent(user.username)}`;
+      /* Guardar token en users.json para validarlo después */
+      const { users: allUsers, sha } = await readUsers();
+      const uidx = allUsers.findIndex(u => u.username === user.username);
+      if (uidx !== -1) {
+        allUsers[uidx].resetToken   = token;
+        allUsers[uidx].resetTokenAt = Date.now();
+        await writeUsers(allUsers, sha, `forgot password: ${user.username}`);
+      }
+      await emailjs.sendResetEmail(user.email, user.username, resetUrl);
+    }
+  } catch (e) {
+    console.error('Forgot password error:', e);
+  }
+
+  return res.status(200).json({ ok: true });
+}
+
+/* ---- Reset contraseña por token (desde email) ---- */
+async function handleResetPasswordToken(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  const { username, token, newPassword } = req.body || {};
+
+  if (!username || !token || !newPassword) {
+    return res.status(400).json({ error: 'Faltan datos' });
+  }
+  if (newPassword.length < 6) {
+    return res.status(400).json({ error: 'Contraseña demasiado corta' });
+  }
+
+  const { users, sha } = await readUsers();
+  const idx = users.findIndex(u => u.username === username.toLowerCase());
+  if (idx === -1) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+  const user = users[idx];
+
+  /* Validar token y que no haya caducado (1 hora) */
+  if (!user.resetToken || user.resetToken !== token) {
+    return res.status(400).json({ error: 'Token no válido' });
+  }
+  const tokenAge = Date.now() - (user.resetTokenAt || 0);
+  if (tokenAge > 3600000) {
+    return res.status(400).json({ error: 'El enlace ha caducado. Solicita uno nuevo.' });
+  }
+
+  users[idx].passwordHash  = await hashPassword(newPassword);
+  users[idx].firstLogin    = false;
+  users[idx].resetToken    = null;
+  users[idx].resetTokenAt  = null;
+
+  await writeUsers(users, sha, `reset password token: ${username}`);
+  return res.status(200).json({ ok: true });
 }
