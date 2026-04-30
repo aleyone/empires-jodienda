@@ -34,13 +34,13 @@
     },
     {
       "username": "poro",
-      "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+      "passwordHash": "da248eeaffa573da8c323c3eb56aaf32ec6ce244e401a24c55f30c907d0bbfb5",
       "email": "christiangilperez@gmail.com",
       "role": "consultant",
       "firstLogin": false,
       "createdAt": "2026-04-30T10:54:20.658Z",
-      "resetToken": "b8512919685190b3dc9933cdc232f2451298ce7b",
-      "resetTokenAt": 1777547529965
+      "resetToken": null,
+      "resetTokenAt": null
     }
   ]
 }
