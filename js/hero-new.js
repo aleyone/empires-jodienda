@@ -122,12 +122,12 @@ function showDuplicateModal(hero) {
     if (noImg) noImg.style.display = 'flex';
   }
 
-  modal.classList.add('open');
+  modal.style.display = 'block';
 }
 
 /* Botón "Es otro héroe, continuar" */
 document.getElementById('dup-continue').addEventListener('click', () => {
-  document.getElementById('modal-duplicate').classList.remove('open');
+  document.getElementById('modal-duplicate').style.display = 'none';
   duplicateWarned = true;
   /* Quitar aviso del campo */
   document.getElementById('hero-name').classList.remove('error');
@@ -137,7 +137,7 @@ document.getElementById('dup-continue').addEventListener('click', () => {
 
 /* Botón "Cancelar, es el mismo" */
 document.getElementById('dup-cancel').addEventListener('click', () => {
-  document.getElementById('modal-duplicate').classList.remove('open');
+  document.getElementById('modal-duplicate').style.display = 'none';
   document.getElementById('hero-name').value = '';
   document.getElementById('hero-name').focus();
   duplicateWarned = false;
