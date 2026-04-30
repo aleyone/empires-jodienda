@@ -82,7 +82,10 @@ function checkNameDuplicate(value) {
     errEl.textContent = `Ya existe un héroe llamado "${match.hero.name}". Cambia el nombre.`;
     errEl.classList.add('visible');
   } else {
-    /* Coincidencia parcial → mostrar modal de confirmación */
+    /* Coincidencia parcial → solo modal, sin error inline */
+    nameInput.classList.remove('error');
+    errEl.textContent = '';
+    errEl.classList.remove('visible');
     showDuplicateModal(match.hero);
   }
 }
@@ -95,6 +98,7 @@ function showDuplicateModal(hero) {
   const heroEl   = document.getElementById('dup-hero-element');
 
   heroName.textContent = hero.name;
+  document.getElementById('dup-hero-name-2').textContent = hero.name;
 
   const ELEMENT_LABELS = {
     fire: '🔥 Fuego', ice: '❄️ Hielo', nature: '🌿 Naturaleza',
@@ -102,11 +106,14 @@ function showDuplicateModal(hero) {
   };
   heroEl.textContent = ELEMENT_LABELS[hero.element] || hero.element || '';
 
+  const noImg = document.getElementById('dup-hero-noimg');
   if (hero.imagePath) {
     heroImg.src = hero.imagePath;
     heroImg.classList.remove('hidden');
+    if (noImg) noImg.style.display = 'none';
   } else {
     heroImg.classList.add('hidden');
+    if (noImg) noImg.style.display = 'flex';
   }
 
   modal.classList.add('open');
