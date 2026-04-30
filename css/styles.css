@@ -671,9 +671,10 @@ select.form-control option {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease;
-  /* Scroll nativo del backdrop */
   overflow-y: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+  padding: 1rem;
 }
 
 .modal-backdrop.open {
@@ -685,17 +686,13 @@ select.form-control option {
   background: var(--bg-card);
   border: 1px solid var(--border-gold);
   border-radius: var(--radius-xl);
-  width: calc(100% - 2rem);
+  width: 100%;
   max-width: 480px;
   padding: 1.75rem;
   position: relative;
-  /* Centrado con margen, siempre dentro del viewport */
-  margin: 1rem auto;
-  transform: translateY(16px);
-  transition: transform 0.2s ease;
+  margin: 0 auto;
+  /* Sin transform — causaba problemas en móvil */
 }
-
-.modal-backdrop.open .modal { transform: translateY(0); }
 
 .modal-close {
   position: absolute;
