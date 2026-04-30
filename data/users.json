@@ -38,7 +38,9 @@
       "email": "christiangilperez@gmail.com",
       "role": "consultant",
       "firstLogin": false,
-      "createdAt": "2026-04-30T10:54:20.658Z"
+      "createdAt": "2026-04-30T10:54:20.658Z",
+      "resetToken": "b8512919685190b3dc9933cdc232f2451298ce7b",
+      "resetTokenAt": 1777547529965
     }
   ]
 }
