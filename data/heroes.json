@@ -20,6 +20,27 @@
       "imagePath": "https://raw.githubusercontent.com/aleyone/empires-jodienda/main/img/heroes/1777546398603-062f4cbf.jpg",
       "createdBy": "david",
       "createdAt": "2026-04-30T10:53:21.700Z"
+    },
+    {
+      "id": "a723d90b4939",
+      "name": "Khufu",
+      "element": "fire",
+      "rarity": "5",
+      "family": "",
+      "heroClass": "Monk",
+      "manaSpeed": "Lento",
+      "power": "",
+      "attack": "",
+      "defense": "",
+      "health": "",
+      "specialName": "",
+      "specialDesc": "",
+      "notes": "Antes, se llamaba Khafre xDDD",
+      "ratingHard": 0,
+      "ratingCool": 0,
+      "imagePath": "https://raw.githubusercontent.com/aleyone/empires-jodienda/main/img/heroes/1777548064509-6386de2b.jpg",
+      "createdBy": "adrian",
+      "createdAt": "2026-04-30T11:21:07.496Z"
     }
   ]
 }
