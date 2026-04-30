@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "routes": [
+    { "src": "/api/users/first-login",    "dest": "/api/users.js" },
+    { "src": "/api/users/reset-password", "dest": "/api/users.js" },
+    { "src": "/api/users/forgot-password","dest": "/api/users.js" },
+    { "src": "/api/users/([^/]+)",        "dest": "/api/users.js?username=$1" },
+    { "src": "/api/users",                "dest": "/api/users.js" },
+    { "src": "/api/heroes/([^/]+)",       "dest": "/api/heroes.js?id=$1" },
+    { "src": "/api/heroes",               "dest": "/api/heroes.js" },
+    { "src": "/api/login",                "dest": "/api/login.js" }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "users": [
+    {
+      "username": "david",
+      "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+      "email": "",
+      "role": "admin",
+      "firstLogin": true,
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "username": "adrian",
+      "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+      "email": "",
+      "role": "admin",
+      "firstLogin": true,
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "username": "ray",
+      "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+      "email": "",
+      "role": "editor",
+      "firstLogin": true,
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "username": "chris",
+      "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+      "email": "",
+      "role": "editor",
+      "firstLogin": true,
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    }
+  ]
+}

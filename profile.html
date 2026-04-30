@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi perfil – Mini Kripta</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div class="page-wrapper">
+
+  <nav class="navbar">
+    <div class="container navbar-inner">
+      <a href="index.html" class="navbar-brand" style="text-decoration:none;">
+        <span class="brand-mini">⚔ Empires &amp; Jodienda</span>
+        <span class="brand-name">Mini <span>Kripta</span></span>
+      </a>
+      <div class="navbar-actions">
+        <a href="index.html" class="btn btn-ghost btn-sm">← Volver</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="container" style="max-width:480px;">
+
+      <div class="section-header mb-3">
+        <span class="section-title">👤 Mi perfil</span>
+      </div>
+
+      <!-- Info -->
+      <div class="card card-body mb-3" style="display:flex;align-items:center;gap:1rem;">
+        <div class="user-avatar" id="profile-avatar" style="width:56px;height:56px;font-size:1.4rem;">?</div>
+        <div>
+          <div style="font-family:'Cinzel',serif;font-size:1.1rem;font-weight:600;" id="profile-name"></div>
+          <div class="text-muted text-sm" id="profile-role"></div>
+          <div class="text-secondary text-sm" id="profile-email"></div>
+        </div>
+      </div>
+
+      <!-- Cambiar contraseña -->
+      <div class="section-header mb-2">
+        <span class="section-title">🔑 Cambiar contraseña</span>
+      </div>
+
+      <form id="change-pass-form" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="current-pass">Contraseña actual <span class="required">*</span></label>
+          <input class="form-control" type="password" id="current-pass" required>
+          <span class="form-error" id="err-current"></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="new-pass">Nueva contraseña <span class="required">*</span></label>
+          <input class="form-control" type="password" id="new-pass" placeholder="mínimo 6 caracteres" required>
+          <span class="form-error" id="err-new"></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="confirm-pass">Confirmar contraseña <span class="required">*</span></label>
+          <input class="form-control" type="password" id="confirm-pass" required>
+          <span class="form-error" id="err-confirm"></span>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">Guardar contraseña</button>
+      </form>
+
+    </div>
+  </main>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="js/auth.js"></script>
+<script src="js/utils.js"></script>
+<script>
+  Auth.requireAuth();
+  const session = Auth.getSession();
+
+  const ROLE_LABELS = { admin: '👑 Administrador', editor: '✏️ Editor', consultant: '👁 Consultor' };
+
+  document.getElementById('profile-avatar').textContent = session.username.charAt(0).toUpperCase();
+  document.getElementById('profile-name').textContent   = session.username;
+  document.getElementById('profile-role').textContent   = ROLE_LABELS[session.role] || session.role;
+  document.getElementById('profile-email').textContent  = session.email || 'Sin email';
+
+  document.getElementById('change-pass-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    document.querySelectorAll('.form-error').forEach(el => { el.textContent=''; el.classList.remove('visible'); });
+
+    const currentPass = document.getElementById('current-pass').value;
+    const newPass     = document.getElementById('new-pass').value;
+    const confirmPass = document.getElementById('confirm-pass').value;
+
+    if (!currentPass) return showErr('err-current', 'Introduce tu contraseña actual');
+    if (newPass.length < 6) return showErr('err-new', 'Mínimo 6 caracteres');
+    if (newPass !== confirmPass) return showErr('err-confirm', 'Las contraseñas no coinciden');
+
+    try {
+      const res = await fetch('/api/users/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-username': session.username },
+        body: JSON.stringify({ currentPassword: currentPass, newPassword: newPass })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(()=>({}));
+        return showErr('err-current', err.error || 'Error al cambiar contraseña');
+      }
+      showToast('Contraseña cambiada correctamente', 'success');
+      e.target.reset();
+    } catch {
+      showToast('Error de conexión', 'error');
+    }
+  });
+
+  function showErr(id, msg) {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = msg; el.classList.add('visible'); }
+  }
+</script>
+</body>
+</html>

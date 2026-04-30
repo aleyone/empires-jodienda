@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de usuarios – Mini Kripta</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div class="page-wrapper">
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="container navbar-inner">
+      <a href="index.html" class="navbar-brand" style="text-decoration:none;">
+        <span class="brand-mini">⚔ Empires &amp; Jodienda</span>
+        <span class="brand-name">Mini <span>Kripta</span></span>
+      </a>
+      <div class="navbar-actions">
+        <a href="index.html" class="btn btn-ghost btn-sm">← Volver</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="container" style="max-width:720px;">
+
+      <div class="section-header mb-3">
+        <span class="section-title">⚙️ Gestión de usuarios</span>
+        <button class="btn btn-primary btn-sm" id="btn-new-user">+ Nuevo usuario</button>
+      </div>
+
+      <!-- TABLA USUARIOS -->
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;" id="users-table">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border-gold);">
+              <th style="text-align:left;padding:0.6rem 0.75rem;font-size:0.78rem;color:var(--text-muted);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;">Usuario</th>
+              <th style="text-align:left;padding:0.6rem 0.75rem;font-size:0.78rem;color:var(--text-muted);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;">Email</th>
+              <th style="text-align:left;padding:0.6rem 0.75rem;font-size:0.78rem;color:var(--text-muted);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;">Rol</th>
+              <th style="text-align:left;padding:0.6rem 0.75rem;font-size:0.78rem;color:var(--text-muted);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;">Estado</th>
+              <th style="text-align:right;padding:0.6rem 0.75rem;font-size:0.78rem;color:var(--text-muted);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody">
+            <!-- Se rellena con JS -->
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- MODAL: Crear / Editar usuario -->
+<div class="modal-backdrop" id="modal-user">
+  <div class="modal">
+    <button class="modal-close" id="close-modal-user">✕</button>
+    <div class="modal-title" id="modal-user-title">Nuevo usuario</div>
+    <form id="user-form" novalidate>
+      <input type="hidden" id="edit-username-original">
+
+      <div class="form-group">
+        <label class="form-label" for="u-username">Nombre de usuario <span class="required">*</span></label>
+        <input class="form-control" type="text" id="u-username" placeholder="sin espacios, minúsculas" required>
+        <span class="form-error" id="err-u-username"></span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="u-email">Email</label>
+        <input class="form-control" type="email" id="u-email" placeholder="correo@ejemplo.com">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="u-role">Rol <span class="required">*</span></label>
+        <select class="form-control" id="u-role" required>
+          <option value="consultant">Consultor (solo ver)</option>
+          <option value="editor">Editor (subir y editar héroes)</option>
+          <option value="admin">Admin (control total)</option>
+        </select>
+      </div>
+
+      <div class="form-group" id="pass-group">
+        <label class="form-label" for="u-password">Contraseña inicial <span class="required">*</span></label>
+        <input class="form-control" type="password" id="u-password" placeholder="mínimo 6 caracteres">
+        <span class="form-hint">El usuario deberá cambiarla en su primer acceso.</span>
+        <span class="form-error" id="err-u-password"></span>
+      </div>
+
+      <div class="flex gap-1 mt-2">
+        <button type="button" class="btn btn-ghost flex-1" id="cancel-user-modal">Cancelar</button>
+        <button type="submit" class="btn btn-primary flex-1" id="save-user-btn">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: Reset contraseña -->
+<div class="modal-backdrop" id="modal-reset-pass">
+  <div class="modal" style="max-width:380px;">
+    <button class="modal-close" id="close-reset-pass">✕</button>
+    <div class="modal-title">🔑 Resetear contraseña</div>
+    <p class="text-secondary mb-2" style="font-size:0.9rem;">
+      Introduce una nueva contraseña para <strong id="reset-username-label"></strong>.
+      El usuario deberá cambiarla en su próximo acceso.
+    </p>
+    <form id="reset-pass-form" novalidate>
+      <input type="hidden" id="reset-target-user">
+      <div class="form-group">
+        <label class="form-label" for="new-pass-admin">Nueva contraseña <span class="required">*</span></label>
+        <input class="form-control" type="password" id="new-pass-admin" placeholder="mínimo 6 caracteres" required>
+        <span class="form-error" id="err-new-pass-admin"></span>
+      </div>
+      <div class="flex gap-1 mt-1">
+        <button type="button" class="btn btn-ghost flex-1" id="cancel-reset-pass">Cancelar</button>
+        <button type="submit" class="btn btn-primary flex-1">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: Confirmar borrado usuario -->
+<div class="modal-backdrop" id="modal-delete-user">
+  <div class="modal" style="max-width:360px;">
+    <div class="modal-title">⚠️ Eliminar usuario</div>
+    <p class="text-secondary mb-3" style="font-size:0.9rem;">
+      ¿Seguro que quieres eliminar al usuario <strong id="delete-username-label"></strong>?
+    </p>
+    <div class="flex gap-1">
+      <button class="btn btn-ghost flex-1" id="cancel-delete-user">Cancelar</button>
+      <button class="btn btn-danger flex-1" id="confirm-delete-user">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="js/auth.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "name": "mini-kripta",
+  "version": "1.0.0",
+  "description": "Mini Kripta · Empires & Jodienda — El bestiario de los infames",
+  "private": true,
+  "dependencies": {
+    "formidable": "^3.5.1"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
