@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nuevo Héroe – Mini Kripta · Empires &amp; Jodienda</title>
+  <title>Nuevo héroe – Mini Kripta · Empires &amp; Jodienda</title>
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -201,6 +201,32 @@
       </form>
     </div>
   </main>
+</div>
+
+
+<!-- MODAL: Posible duplicado -->
+<div class="modal-backdrop" id="modal-duplicate">
+  <div class="modal" style="max-width:380px;">
+    <div class="modal-title">⚠️ Posible héroe duplicado</div>
+    <p class="text-secondary mb-2" style="font-size:0.9rem;">
+      Encontramos un héroe con un nombre similar ya guardado:
+    </p>
+    <div style="background:var(--bg-surface);border:1px solid var(--border-gold);border-radius:var(--radius-md);padding:1rem;display:flex;align-items:center;gap:1rem;margin-bottom:1.25rem;">
+      <img id="dup-hero-img" src="" alt="" style="width:64px;height:80px;object-fit:cover;object-position:top;border-radius:var(--radius-sm);flex-shrink:0;" class="hidden">
+      <div id="dup-hero-noimg" style="width:64px;height:80px;background:var(--bg-card);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;">⚔</div>
+      <div>
+        <div style="font-family:'Cinzel',serif;font-weight:600;font-size:0.95rem;" id="dup-hero-name"></div>
+        <div class="text-muted text-sm mt-1" id="dup-hero-element"></div>
+        <p style="font-size:0.78rem;color:var(--text-muted);margin-top:0.3rem;">
+          Posiblemente ya exista ese héroe.<br>Encontrada coincidencia guardada como "<span id="dup-hero-name-2" style="color:var(--gold);"></span>"
+        </p>
+      </div>
+    </div>
+    <div class="flex gap-1">
+      <button class="btn btn-ghost flex-1" id="dup-cancel">← Es el mismo, cancelar</button>
+      <button class="btn btn-primary flex-1" id="dup-continue">Es otro, continuar →</button>
+    </div>
+  </div>
 </div>
 
 <div id="toast-container"></div>

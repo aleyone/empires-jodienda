@@ -1,30 +1,74 @@
 /* ============================================================
    auth.js — Gestión de sesión y roles
+   Sesión persiste mientras el navegador esté abierto.
+   Se destruye al hacer logout o al cerrar el navegador.
    ============================================================ */
 
 const Auth = (() => {
 
   const SESSION_KEY = 'mk_session';
 
+  /* Usamos sessionStorage (muere al cerrar pestaña/navegador)
+     pero lo sincronizamos con localStorage para que sobreviva
+     entre pestañas del mismo navegador mientras esté abierto */
   function getSession() {
     try {
-      const raw = sessionStorage.getItem(SESSION_KEY);
+      /* Intentar sessionStorage primero */
+      let raw = sessionStorage.getItem(SESSION_KEY);
+      if (!raw) {
+        /* Recuperar de localStorage si hay sesión activa en otra pestaña */
+        raw = localStorage.getItem(SESSION_KEY);
+        if (raw) sessionStorage.setItem(SESSION_KEY, raw);
+      }
       return raw ? JSON.parse(raw) : null;
     } catch { return null; }
   }
 
   function setSession(user) {
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+    const data = JSON.stringify({
       username: user.username,
       role:     user.role,
       email:    user.email || ''
-    }));
+    });
+    sessionStorage.setItem(SESSION_KEY, data);
+    localStorage.setItem(SESSION_KEY, data);
+
+    /* Registrar que hay una sesión activa en esta pestaña */
+    _registerTab();
   }
 
   function clearSession() {
     sessionStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem('mk_tabs');
   }
 
+  /* ---- Control de pestañas abiertas ---- */
+  function _registerTab() {
+    const tabId = sessionStorage.getItem('mk_tab_id') || Math.random().toString(36).slice(2);
+    sessionStorage.setItem('mk_tab_id', tabId);
+    const tabs = JSON.parse(localStorage.getItem('mk_tabs') || '[]');
+    if (!tabs.includes(tabId)) tabs.push(tabId);
+    localStorage.setItem('mk_tabs', JSON.stringify(tabs));
+  }
+
+  function _unregisterTab() {
+    const tabId = sessionStorage.getItem('mk_tab_id');
+    if (!tabId) return;
+    let tabs = JSON.parse(localStorage.getItem('mk_tabs') || '[]');
+    tabs = tabs.filter(t => t !== tabId);
+    localStorage.setItem('mk_tabs', JSON.stringify(tabs));
+    /* Si no quedan pestañas abiertas, destruir la sesión */
+    if (tabs.length === 0) {
+      localStorage.removeItem(SESSION_KEY);
+      localStorage.removeItem('mk_tabs');
+    }
+  }
+
+  /* Limpiar sesión al cerrar la pestaña */
+  window.addEventListener('beforeunload', _unregisterTab);
+
+  /* ---- API pública ---- */
   function isLoggedIn() { return !!getSession(); }
   function getRole()     { return getSession()?.role || null; }
   function getUsername() { return getSession()?.username || null; }
@@ -32,13 +76,13 @@ const Auth = (() => {
   function isEditor()    { return getRole() === 'editor' || isAdmin(); }
   function canEdit()     { return isEditor(); }
 
-  /* Redirige al login guardando la URL actual como returnUrl */
   function requireAuth() {
     if (!isLoggedIn()) {
       const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
       window.location.href = `login.html?returnUrl=${returnUrl}`;
       return false;
     }
+    _registerTab();
     return true;
   }
 

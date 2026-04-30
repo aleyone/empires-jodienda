@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mi perfil – Mini Kripta</title>
+  <title>Mi perfil – Mini Kripta · Empires &amp; Jodienda</title>
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -23,23 +23,41 @@
   </nav>
 
   <main>
-    <div class="container" style="max-width:480px;">
+    <div class="container" style="max-width:520px;">
 
-      <div class="section-header mb-3">
-        <span class="section-title">👤 Mi perfil</span>
-      </div>
-
-      <!-- Info -->
-      <div class="card card-body mb-3" style="display:flex;align-items:center;gap:1rem;">
-        <div class="user-avatar" id="profile-avatar" style="width:56px;height:56px;font-size:1.4rem;">?</div>
+      <!-- CABECERA PERFIL -->
+      <div style="display:flex;align-items:center;gap:1rem;margin-bottom:2rem;padding:1.25rem;background:var(--bg-card);border:1px solid var(--border-gold);border-radius:var(--radius-lg);">
+        <div class="user-avatar" id="profile-avatar" style="width:56px;height:56px;font-size:1.5rem;flex-shrink:0;">?</div>
         <div>
           <div style="font-family:'Cinzel',serif;font-size:1.1rem;font-weight:600;" id="profile-name"></div>
           <div class="text-muted text-sm" id="profile-role"></div>
-          <div class="text-secondary text-sm" id="profile-email"></div>
+          <div class="text-secondary text-sm" id="profile-email" style="margin-top:2px;"></div>
         </div>
       </div>
 
-      <!-- Cambiar contraseña -->
+      <!-- DATOS DE ACCESO -->
+      <div class="section-header mb-2">
+        <span class="section-title">👤 Datos de acceso</span>
+      </div>
+
+      <form id="profile-form" novalidate style="margin-bottom:2rem;">
+        <div class="form-group">
+          <label class="form-label" for="p-username">Nombre de usuario</label>
+          <input class="form-control" type="text" id="p-username" placeholder="nombre de usuario">
+          <span class="form-hint">Solo letras, números y guion bajo. Sin espacios.</span>
+          <span class="form-error" id="err-p-username"></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="p-email">Email</label>
+          <input class="form-control" type="email" id="p-email" placeholder="correo@ejemplo.com">
+          <span class="form-error" id="err-p-email"></span>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full" id="save-profile-btn">
+          Guardar cambios
+        </button>
+      </form>
+
+      <!-- CAMBIAR CONTRASEÑA -->
       <div class="section-header mb-2">
         <span class="section-title">🔑 Cambiar contraseña</span>
       </div>
@@ -60,7 +78,9 @@
           <input class="form-control" type="password" id="confirm-pass" required>
           <span class="form-error" id="err-confirm"></span>
         </div>
-        <button type="submit" class="btn btn-primary btn-full">Guardar contraseña</button>
+        <button type="submit" class="btn btn-primary btn-full" id="save-pass-btn">
+          Guardar contraseña
+        </button>
       </form>
 
     </div>
@@ -77,14 +97,59 @@
 
   const ROLE_LABELS = { admin: '👑 Administrador', editor: '✏️ Editor', consultant: '👁 Consultor' };
 
+  /* Rellenar cabecera y formulario */
   document.getElementById('profile-avatar').textContent = session.username.charAt(0).toUpperCase();
   document.getElementById('profile-name').textContent   = session.username;
   document.getElementById('profile-role').textContent   = ROLE_LABELS[session.role] || session.role;
-  document.getElementById('profile-email').textContent  = session.email || 'Sin email';
+  document.getElementById('profile-email').textContent  = session.email || 'Sin email registrado';
+  document.getElementById('p-username').value           = session.username;
+  document.getElementById('p-email').value              = session.email || '';
 
+  /* ---- GUARDAR DATOS DE ACCESO ---- */
+  document.getElementById('profile-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearErrors();
+
+    const newUsername = document.getElementById('p-username').value.trim().toLowerCase();
+    const newEmail    = document.getElementById('p-email').value.trim();
+
+    if (!newUsername) return showErr('err-p-username', 'El usuario no puede estar vacío');
+    if (!/^[a-z0-9_]+$/.test(newUsername)) return showErr('err-p-username', 'Solo letras, números y guion bajo');
+    if (newEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) return showErr('err-p-email', 'Email no válido');
+
+    const btn = document.getElementById('save-profile-btn');
+    btn.disabled = true; btn.textContent = 'Guardando...';
+
+    try {
+      const res = await fetch(`/api/users/${session.username}`, {
+        method:  'PUT',
+        headers: { 'Content-Type': 'application/json', 'x-username': session.username },
+        body:    JSON.stringify({ username: newUsername, email: newEmail })
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        return showErr('err-p-username', err.error || 'Error al guardar');
+      }
+
+      /* Actualizar sesión con nuevos datos */
+      Auth.setSession({ ...session, username: newUsername, email: newEmail });
+      document.getElementById('profile-avatar').textContent = newUsername.charAt(0).toUpperCase();
+      document.getElementById('profile-name').textContent   = newUsername;
+      document.getElementById('profile-email').textContent  = newEmail || 'Sin email registrado';
+      showToast('Datos actualizados correctamente', 'success');
+
+    } catch {
+      showToast('Error de conexión', 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Guardar cambios';
+    }
+  });
+
+  /* ---- CAMBIAR CONTRASEÑA ---- */
   document.getElementById('change-pass-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    document.querySelectorAll('.form-error').forEach(el => { el.textContent=''; el.classList.remove('visible'); });
+    clearErrors();
 
     const currentPass = document.getElementById('current-pass').value;
     const newPass     = document.getElementById('new-pass').value;
@@ -94,26 +159,37 @@
     if (newPass.length < 6) return showErr('err-new', 'Mínimo 6 caracteres');
     if (newPass !== confirmPass) return showErr('err-confirm', 'Las contraseñas no coinciden');
 
+    const btn = document.getElementById('save-pass-btn');
+    btn.disabled = true; btn.textContent = 'Guardando...';
+
     try {
       const res = await fetch('/api/users/change-password', {
-        method: 'POST',
+        method:  'POST',
         headers: { 'Content-Type': 'application/json', 'x-username': session.username },
-        body: JSON.stringify({ currentPassword: currentPass, newPassword: newPass })
+        body:    JSON.stringify({ currentPassword: currentPass, newPassword: newPass })
       });
+
       if (!res.ok) {
-        const err = await res.json().catch(()=>({}));
+        const err = await res.json().catch(() => ({}));
         return showErr('err-current', err.error || 'Error al cambiar contraseña');
       }
+
       showToast('Contraseña cambiada correctamente', 'success');
       e.target.reset();
+
     } catch {
       showToast('Error de conexión', 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Guardar contraseña';
     }
   });
 
   function showErr(id, msg) {
     const el = document.getElementById(id);
     if (el) { el.textContent = msg; el.classList.add('visible'); }
+  }
+  function clearErrors() {
+    document.querySelectorAll('.form-error').forEach(e => { e.textContent = ''; e.classList.remove('visible'); });
   }
 </script>
 </body>

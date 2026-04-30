@@ -63,6 +63,12 @@ async function handler(req, res) {
         const { heroes, sha } = await readHeroes();
         const idx = heroes.findIndex(h => h.id === id);
         if (idx === -1) return res.status(404).json({ error: 'Héroe no encontrado' });
+        /* Editors can only edit their own heroes */
+        const callerPut = req.headers['x-username'];
+        const isAdminPut = await checkRole(req, 'admin');
+        if (!isAdminPut && heroes[idx].createdBy !== callerPut) {
+          return res.status(403).json({ error: 'Solo puedes editar tus propios héroes' });
+        }
 
         let imagePath = heroes[idx].imagePath;
         if (imageBuffer && imageBuffer.length > 0) {
@@ -90,6 +96,12 @@ async function handler(req, res) {
         const { heroes, sha } = await readHeroes();
         const idx = heroes.findIndex(h => h.id === id);
         if (idx === -1) return res.status(404).json({ error: 'Héroe no encontrado' });
+        /* Editors can only delete their own heroes */
+        const callerDel = req.headers['x-username'];
+        const isAdminDel = await checkRole(req, 'admin');
+        if (!isAdminDel && heroes[idx].createdBy !== callerDel) {
+          return res.status(403).json({ error: 'Solo puedes eliminar tus propios héroes' });
+        }
 
         const hero = heroes[idx];
         if (hero.imagePath) {

@@ -108,10 +108,30 @@ function renderHero(h) {
     document.getElementById('hero-notes').textContent = h.notes;
   }
 
-  /* Acciones edición */
+  /* Acciones edición — admin ve siempre, editor solo sus propios */
   if (Auth.canEdit()) {
-    document.getElementById('edit-actions').classList.remove('hidden');
+    const editActions = document.getElementById('edit-actions');
+    const isOwner     = h.createdBy === Auth.getUsername();
+    const canModify   = Auth.isAdmin() || isOwner;
+
+    editActions.classList.remove('hidden');
     document.getElementById('btn-edit').href = `hero-new.html?edit=${h.id}`;
+
+    if (!canModify) {
+      /* Deshabilitar botones y mostrar aviso */
+      const btnEdit   = document.getElementById('btn-edit');
+      const btnDelete = document.getElementById('btn-delete');
+
+      btnEdit.style.opacity   = '0.4';
+      btnEdit.style.pointerEvents = 'none';
+      btnDelete.style.opacity = '0.4';
+      btnDelete.style.pointerEvents = 'none';
+
+      const notice = document.createElement('p');
+      notice.style.cssText = 'font-size:0.78rem;color:var(--text-muted);margin-top:0.5rem;';
+      notice.textContent    = `Este héroe fue añadido por ${h.createdBy || 'otro usuario'}. Solo puedes editar o eliminar tus propios héroes.`;
+      editActions.appendChild(notice);
+    }
   }
 
   /* Botón compartir */
