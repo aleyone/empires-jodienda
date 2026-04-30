@@ -1,3 +1,25 @@
 {
-  "heroes": []
+  "heroes": [
+    {
+      "id": "628a06911f74",
+      "name": "Bane",
+      "element": "holy",
+      "rarity": "3",
+      "family": "Top",
+      "heroClass": "Rogue",
+      "manaSpeed": "Muy lento",
+      "power": "234",
+      "attack": "223",
+      "defense": "43",
+      "health": "2332",
+      "specialName": "patata frita",
+      "specialDesc": "yuhuyu",
+      "notes": "pringao",
+      "ratingHard": 5,
+      "ratingCool": 1,
+      "imagePath": "/img/heroes/1777545272019-222acccb.jpg",
+      "createdBy": "david",
+      "createdAt": "2026-04-30T10:34:34.991Z"
+    }
+  ]
 }
