@@ -53,12 +53,18 @@ function findDuplicate(name) {
   return null;
 }
 
-/* ---- VALIDACIÓN EN TIEMPO REAL del nombre ---- */
-let nameCheckTimer;
-document.getElementById('hero-name').addEventListener('input', (e) => {
+/* ---- VALIDACIÓN AL SALIR DEL CAMPO (blur) ---- */
+document.getElementById('hero-name').addEventListener('blur', (e) => {
   duplicateWarned = false;
-  clearTimeout(nameCheckTimer);
-  nameCheckTimer = setTimeout(() => checkNameDuplicate(e.target.value), 400);
+  checkNameDuplicate(e.target.value);
+});
+
+/* Limpiar aviso mientras escribe */
+document.getElementById('hero-name').addEventListener('input', () => {
+  const errEl = document.getElementById('err-name');
+  document.getElementById('hero-name').classList.remove('error');
+  errEl.textContent = '';
+  errEl.classList.remove('visible');
 });
 
 function checkNameDuplicate(value) {
