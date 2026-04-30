@@ -7,6 +7,7 @@
     { "source": "/api/users/forgot-password",       "destination": "/api/users" },
     { "source": "/api/users/change-password",       "destination": "/api/users" },
     { "source": "/api/users/:username",             "destination": "/api/users?username=:username" },
+    { "source": "/api/heroes/:id/comment",          "destination": "/api/heroes?id=:id&action=comment" },
     { "source": "/api/heroes/:id",                  "destination": "/api/heroes?id=:id" }
   ]
 }

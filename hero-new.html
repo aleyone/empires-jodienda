@@ -4,6 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Nuevo héroe – Mini Kripta · Empires &amp; Jodienda</title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/img/favicon-16.png">
+  <link rel="apple-touch-icon" href="/img/icon-192.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#c9952a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mini Kripta">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -13,9 +22,12 @@
   <!-- NAVBAR -->
   <nav class="navbar">
     <div class="container navbar-inner">
-      <a href="index.html" class="navbar-brand" style="text-decoration:none;">
-        <span class="brand-mini">⚔ Empires &amp; Jodienda</span>
-        <span class="brand-name">Mini <span>Kripta</span></span>
+      <a href="index.html" class="navbar-brand" style="text-decoration:none;display:flex;align-items:center;gap:0.6rem;">
+        <img src="/img/logo-48.png" alt="Mini Kripta" style="width:38px;height:38px;object-fit:contain;flex-shrink:0;">
+        <div>
+          <span class="brand-mini">⚔ Empires &amp; Jodienda</span>
+          <span class="brand-name">Mini <span>Kripta</span></span>
+        </div>
       </a>
       <div class="navbar-actions">
         <a href="index.html" class="btn btn-ghost btn-sm">← Cancelar</a>
@@ -183,11 +195,18 @@
           </div>
         </div>
 
+        <!-- CÓMO VENCERLE -->
+        <div class="form-group">
+          <label class="form-label" for="hero-howtobeat">⚔ Cómo vencerle <span style="color:var(--text-muted);font-weight:400;">(opcional)</span></label>
+          <textarea class="form-control" id="hero-howtobeat" rows="3"
+            placeholder="Estrategias, héroes recomendados, formaciones..."></textarea>
+        </div>
+
         <!-- NOTAS -->
         <div class="form-group">
-          <label class="form-label" for="hero-notes">Notas del grupo <span style="color:var(--text-muted);font-weight:400;">(opcional)</span></label>
+          <label class="form-label" for="hero-notes">📝 Notas del grupo <span style="color:var(--text-muted);font-weight:400;">(opcional)</span></label>
           <textarea class="form-control" id="hero-notes" rows="3"
-            placeholder="Comentarios, estrategias, anécdotas del combate..."></textarea>
+            placeholder="Comentarios, anécdotas del combate..."></textarea>
         </div>
 
         <!-- SUBMIT -->
@@ -235,5 +254,13 @@
 <script src="js/utils.js"></script>
 <script src="js/heroes.js"></script>
 <script src="js/hero-new.js"></script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    });
+  }
+</script>
 </body>
 </html>

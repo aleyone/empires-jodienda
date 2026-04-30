@@ -19,6 +19,8 @@ async function loadHeroes() {
     allHeroes = await HeroesAPI.getAll();
     buildFamilyFilter();
     applyFilters();
+    const tc = document.getElementById('total-count');
+    if (tc) tc.textContent = allHeroes.length;
   } catch (err) {
     showToast('Error al cargar héroes', 'error');
     console.error(err);

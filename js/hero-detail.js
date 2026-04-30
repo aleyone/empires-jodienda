@@ -136,6 +136,10 @@ function renderHero(h) {
 
   /* Botón compartir */
   document.getElementById('share-btn').addEventListener('click', shareHero);
+
+  /* Extras */
+  renderHowToBeat(h);
+  initComments(h);
 }
 
 function setMeta(id, content) {
@@ -182,3 +186,93 @@ document.getElementById('confirm-delete').addEventListener('click', async () => 
 });
 
 loadHero();
+
+/* ============================================================
+   CÓMO VENCERLE + COMENTARIOS
+   ============================================================ */
+
+function renderHowToBeat(h) {
+  if (h.howToBeat) {
+    document.getElementById('howtobeat-section').classList.remove('hidden');
+    document.getElementById('hero-howtobeat').textContent = h.howToBeat;
+  }
+}
+
+/* ---- COMENTARIOS ---- */
+function initComments(h) {
+  const btnAdd    = document.getElementById('btn-add-comment');
+  const formWrap  = document.getElementById('comment-form-wrap');
+  const noComment = document.getElementById('no-comments');
+  const list      = document.getElementById('comments-list');
+
+  if (Auth.isLoggedIn()) btnAdd.style.display = 'inline-flex';
+
+  /* Render comentarios existentes */
+  const comments = h.comments || [];
+  if (comments.length > 0) {
+    noComment.style.display = 'none';
+    list.innerHTML = comments.map(c => renderComment(c)).join('');
+  }
+
+  /* Añadir comentario */
+  btnAdd.addEventListener('click', () => {
+    formWrap.classList.remove('hidden');
+    btnAdd.style.display = 'none';
+    document.getElementById('comment-input').focus();
+  });
+
+  document.getElementById('cancel-comment').addEventListener('click', () => {
+    formWrap.classList.add('hidden');
+    btnAdd.style.display = 'inline-flex';
+    document.getElementById('comment-input').value = '';
+  });
+
+  document.getElementById('submit-comment').addEventListener('click', async () => {
+    const text = document.getElementById('comment-input').value.trim();
+    if (!text) return;
+
+    const btn = document.getElementById('submit-comment');
+    btn.disabled = true;
+
+    try {
+      const res = await fetch(`/api/heroes/${heroId}/comment`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'x-username': Auth.getUsername() },
+        body:    JSON.stringify({ text })
+      });
+
+      if (!res.ok) throw new Error();
+
+      const updated = await res.json();
+      const newComments = updated.comments || [];
+
+      noComment.style.display = 'none';
+      list.innerHTML = newComments.map(c => renderComment(c)).join('');
+      formWrap.classList.add('hidden');
+      btnAdd.style.display = 'inline-flex';
+      document.getElementById('comment-input').value = '';
+      showToast('Comentario publicado', 'success');
+
+    } catch {
+      showToast('Error al publicar comentario', 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  });
+}
+
+function renderComment(c) {
+  return `
+    <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:0.75rem;">
+      <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;">
+        <div style="width:24px;height:24px;border-radius:50%;background:var(--gold-dim);border:1px solid var(--border-gold);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:0.65rem;font-weight:600;color:var(--gold);">${(c.author||'?').charAt(0).toUpperCase()}</div>
+        <span style="font-size:0.82rem;font-weight:600;color:var(--text-secondary);">${escapeHtml(c.author||'')}</span>
+        <span style="font-size:0.75rem;color:var(--text-muted);margin-left:auto;">${formatDate(c.createdAt)}</span>
+      </div>
+      <p style="font-size:0.9rem;color:var(--text-primary);line-height:1.5;">${escapeHtml(c.text||'')}</p>
+    </div>`;
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}

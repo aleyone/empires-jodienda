@@ -104,6 +104,10 @@ const HeroesAPI = (() => {
             <div title="Qué jodido es" style="display:flex;gap:1px;">${hardStars}</div>
             <div title="Qué mola" style="display:flex;gap:1px;">${coolStars}</div>
           </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.4rem;padding-top:0.4rem;border-top:1px solid var(--border-subtle);">
+            <span style="font-size:0.7rem;color:var(--text-muted);">${escapeHtml(hero.createdBy||'')}</span>
+            <span style="font-size:0.7rem;color:var(--text-muted);">${hero.createdAt ? new Date(hero.createdAt).toLocaleDateString('es-ES',{day:'2-digit',month:'short'}) : ''}</span>
+          </div>
         </div>
       </div>`;
   }

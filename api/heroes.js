@@ -15,6 +15,11 @@ async function handler(req, res) {
   res.setHeader('Content-Type', 'application/json');
   const { id } = req.query;
 
+  /* Comentarios — acción especial */
+  if (req.query.action === 'comment') {
+    return handleComment(req, res, id);
+  }
+
   try {
     switch (req.method) {
 
@@ -167,3 +172,29 @@ function parseMultipart(req) {
 }
 
 function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+/* ---- Endpoint comentarios: POST /api/heroes/:id/comment ---- */
+/* Se accede via rewrite /api/heroes/:id/comment → /api/heroes?id=:id&action=comment */
+async function handleComment(req, res, id) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  const username = req.headers['x-username'];
+  if (!username) return res.status(401).json({ error: 'No autenticado' });
+
+  const { text } = req.body || {};
+  if (!text || !text.trim()) return res.status(400).json({ error: 'Comentario vacío' });
+
+  const { heroes, sha } = await readHeroes();
+  const idx = heroes.findIndex(h => h.id === id);
+  if (idx === -1) return res.status(404).json({ error: 'Héroe no encontrado' });
+
+  if (!heroes[idx].comments) heroes[idx].comments = [];
+  heroes[idx].comments.push({
+    id:        require('crypto').randomBytes(4).toString('hex'),
+    author:    username,
+    text:      text.trim(),
+    createdAt: new Date().toISOString()
+  });
+
+  await writeHeroes(heroes, sha, `comment on hero: ${heroes[idx].name}`);
+  return res.status(200).json(heroes[idx]);
+}

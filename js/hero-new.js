@@ -176,6 +176,7 @@ async function loadHeroForEdit() {
     document.getElementById('hero-special-name').value = hero.specialName || '';
     document.getElementById('hero-special-desc').value = hero.specialDesc || '';
     document.getElementById('hero-notes').value        = hero.notes || '';
+    document.getElementById('hero-howtobeat').value    = hero.howToBeat || '';
 
     setRating('rate-hard', hero.ratingHard || 0);
     setRating('rate-cool', hero.ratingCool || 0);
@@ -298,6 +299,7 @@ document.getElementById('hero-form').addEventListener('submit', async (e) => {
     specialName: document.getElementById('hero-special-name').value.trim(),
     specialDesc: document.getElementById('hero-special-desc').value.trim(),
     notes:       document.getElementById('hero-notes').value.trim(),
+    howToBeat:   document.getElementById('hero-howtobeat').value.trim(),
     ratingHard:  parseInt(document.getElementById('rate-hard').dataset.value) || 0,
     ratingCool:  parseInt(document.getElementById('rate-cool').dataset.value) || 0,
   };
