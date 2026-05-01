@@ -77,3 +77,25 @@ const Changelog = (() => {
   return { check, dismiss };
 
 })();
+
+/* ---- Cargar versión en navbar y login ---- */
+async function loadVersion() {
+  try {
+    const res  = await fetch('/api/changelog');
+    if (!res.ok) return;
+    const data = await res.json();
+    const ver  = `v${data.currentVersion}`;
+
+    const navEl   = document.getElementById('app-version-nav');
+    const loginEl = document.getElementById('app-version-login');
+    if (navEl)   navEl.textContent   = ver;
+    if (loginEl) loginEl.textContent = ver;
+  } catch { /* silencio */ }
+}
+
+/* Auto-ejecutar al cargar */
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', loadVersion);
+} else {
+  loadVersion();
+}
