@@ -2,6 +2,10 @@
   "version": 2,
   "rewrites": [
     {
+      "source": "/api/upload",
+      "destination": "/api/upload"
+    },
+    {
       "source": "/api/users/first-login",
       "destination": "/api/users"
     },

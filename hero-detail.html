@@ -309,6 +309,12 @@
   </div>
 </div>
 
+<!-- LIGHTBOX -->
+<div id="lightbox" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:700;cursor:pointer;align-items:center;justify-content:center;" onclick="document.getElementById('lightbox').style.display='none';">
+  <img id="lightbox-img" src="" alt="" style="max-width:92vw;max-height:88vh;object-fit:contain;border-radius:var(--radius-md);box-shadow:0 8px 40px rgba(0,0,0,0.8);">
+  <button style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:white;font-size:1.5rem;cursor:pointer;" onclick="document.getElementById('lightbox').style.display='none';">✕</button>
+</div>
+
 <!-- MODAL: Aviso datos wiki -->
 <div id="modal-wiki-aviso" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:500;overflow-y:auto;padding:1rem;box-sizing:border-box;">
   <div style="background:var(--bg-card);border:1px solid var(--border-gold);border-radius:16px;width:100%;max-width:420px;padding:1.75rem;margin:0 auto;box-sizing:border-box;">
