@@ -1,1 +1,22 @@
+name: Wiki Check Semanal
 
+on:
+  schedule:
+    - cron: '0 8 * * 1'
+  workflow_dispatch:
+
+jobs:
+  wiki-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ejecutar comprobación semanal de la wiki
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X POST "${{ secrets.APP_URL }}/api/jobs/wiki-check" \
+            -H "Authorization: Bearer ${{ secrets.JOB_SECRET }}" \
+            -H "Content-Type: application/json")
+          echo "Response code: $response"
+          if [ "$response" != "200" ]; then
+            echo "Error: wiki-check returned $response"
+            exit 1
+          fi
