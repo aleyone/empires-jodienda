@@ -23,7 +23,7 @@
       "howToBeat": "",
       "updatedAt": "2026-05-01T14:46:54.869Z",
       "updatedBy": "david",
-      "wikiCheckedAt": "2026-05-01T14:46:54.781Z",
+      "wikiCheckedAt": "2026-05-01T22:22:32.668Z",
       "wikiHasUpdates": false
     },
     {
@@ -45,7 +45,9 @@
       "ratingCool": 0,
       "imagePath": "https://raw.githubusercontent.com/aleyone/empires-jodienda/main/img/heroes/1777548064509-6386de2b.jpg",
       "createdBy": "adrian",
-      "createdAt": "2026-04-30T11:21:07.496Z"
+      "createdAt": "2026-04-30T11:21:07.496Z",
+      "wikiCheckedAt": "2026-05-01T22:22:32.867Z",
+      "wikiHasUpdates": true
     },
     {
       "id": "d36c8eedff9b",
@@ -68,7 +70,7 @@
       "imagePath": "https://static.wikia.nocookie.net/empiresandpuzzles/images/2/2e/Dagr.jpg/revision/latest?cb=20250201234003",
       "createdBy": "david",
       "createdAt": "2026-05-01T14:24:58.144Z",
-      "wikiCheckedAt": "2026-05-01T15:15:51.651Z",
+      "wikiCheckedAt": "2026-05-01T22:22:33.462Z",
       "wikiHasUpdates": false,
       "updatedAt": "2026-05-01T15:15:51.891Z",
       "updatedBy": "david"
@@ -94,7 +96,7 @@
       "imagePath": "https://static.wikia.nocookie.net/empiresandpuzzles/images/a/a6/Leonidas.jpg/revision/latest?cb=20180509011116",
       "createdBy": "david",
       "createdAt": "2026-05-01T14:56:12.792Z",
-      "wikiCheckedAt": "2026-05-01T15:14:39.454Z",
+      "wikiCheckedAt": "2026-05-01T22:22:33.676Z",
       "wikiHasUpdates": false,
       "updatedAt": "2026-05-01T15:14:39.657Z",
       "updatedBy": "david"
@@ -121,7 +123,9 @@
       "createdBy": "david",
       "createdAt": "2026-05-01T15:03:35.046Z",
       "updatedAt": "2026-05-01T22:18:51.790Z",
-      "updatedBy": "david"
+      "updatedBy": "david",
+      "wikiCheckedAt": "2026-05-01T22:22:33.762Z",
+      "wikiHasUpdates": true
     },
     {
       "id": "0fbad6b6b7c3",
@@ -143,7 +147,9 @@
       "ratingCool": 0,
       "imagePath": "https://raw.githubusercontent.com/aleyone/empires-jodienda/main/img/heroes/1777648520731-bb36eb62.jpg",
       "createdBy": "david",
-      "createdAt": "2026-05-01T15:15:23.924Z"
+      "createdAt": "2026-05-01T15:15:23.924Z",
+      "wikiCheckedAt": "2026-05-01T22:22:34.443Z",
+      "wikiHasUpdates": false
     }
   ]
 }
