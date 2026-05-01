@@ -1,278 +1,271 @@
-/* ============================================================
-   hero-detail.js — Página de detalle de héroe
-   ============================================================ */
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nuevo héroe – Mini Kripta · Empires &amp; Puzzles</title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/img/favicon-16.png">
+  <link rel="apple-touch-icon" href="/img/icon-192.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#c9952a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mini Kripta">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
 
-Auth.requireAuth();
-Auth.initNavbar();
+<div class="page-wrapper">
 
-const params = new URLSearchParams(window.location.search);
-const heroId = params.get('id');
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="container navbar-inner">
+      <a href="index.html" class="navbar-brand" style="text-decoration:none;">
+        <img src="/img/logo-48.png" alt="Mini Kripta">
+        <span class="brand-mini">Empires &amp; Puzzles</span>
+        <span class="brand-sep">·</span>
+        <span class="brand-name">Mini <span>Kripta</span></span>
+      </a>
+      <div class="navbar-actions">
+        <a href="index.html" class="btn btn-ghost btn-sm">← Cancelar</a>
+      </div>
+    </div>
+  </nav>
 
-if (!heroId) window.location.href = 'index.html';
+  <main>
+    <div class="container" style="max-width:640px;">
 
-const ELEMENT_LABELS = {
-  fire:   '🔥 Fuego',
-  ice:    '❄️ Hielo',
-  nature: '🌿 Naturaleza',
-  dark:   '💜 Oscuridad',
-  holy:   '✨ Sagrado'
-};
-const ELEMENT_CLS = {
-  fire: 'element-fire', ice: 'element-ice', nature: 'element-nature',
-  dark: 'element-dark', holy: 'element-holy'
-};
+      <div class="section-header mb-3">
+        <span class="section-title" id="form-title">Añadir nuevo infame</span>
+      </div>
 
-let currentHero = null;
+      <form id="hero-form" novalidate>
 
-async function loadHero() {
-  try {
-    currentHero = await HeroesAPI.getById(heroId);
-    renderHero(currentHero);
-  } catch (err) {
-    document.getElementById('hero-loading').querySelector('.empty-state-title').textContent = 'Héroe no encontrado';
-  }
-}
+        <!-- IMAGEN -->
+        <div class="form-group">
+          <label class="form-label">Imagen del héroe</label>
+          <div class="upload-area" id="upload-area">
+            <input type="file" id="hero-image-input" accept="image/*" capture="environment">
+            <span class="upload-icon">📷</span>
+            <p class="upload-text">Toca para subir captura</p>
+            <p class="upload-hint">Se comprimirá automáticamente a ≤400KB</p>
+          </div>
+          <img id="upload-preview" class="upload-preview" alt="preview">
+          <div id="upload-progress" class="progress mt-1 hidden">
+            <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+          </div>
+          <span class="form-hint" id="img-size-hint"></span>
+        </div>
 
-function renderHero(h) {
-  document.getElementById('hero-loading').classList.add('hidden');
-  document.getElementById('hero-content').classList.remove('hidden');
+        <!-- NOMBRE -->
+        <div class="form-group">
+          <label class="form-label" for="hero-name">Nombre del héroe <span class="required">*</span></label>
+          <div style="display:flex;gap:0.5rem;">
+            <input class="form-control" type="text" id="hero-name" placeholder="Ej: Kage, Cobalt, Frigg..." required style="flex:1;">
+            <button type="button" id="btn-wiki-lookup" class="btn btn-secondary" style="white-space:nowrap;flex-shrink:0;" title="Buscar en la wiki">
+              🔍 Wiki
+            </button>
+          </div>
+          <div id="wiki-lookup-status" style="font-size:0.78rem;margin-top:0.3rem;display:none;"></div>
+          <span class="form-error" id="err-name"></span>
+        </div>
 
-  document.title = `${h.name} – Mini Kripta · Empires & Puzzles`;
+        <!-- ELEMENTO + FAMILIA -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div class="form-group">
+            <label class="form-label" for="hero-element">Elemento <span class="required">*</span></label>
+            <select class="form-control" id="hero-element" required>
+              <option value="">Seleccionar</option>
+              <option value="fire">🔥 Fuego</option>
+              <option value="ice">❄️ Hielo</option>
+              <option value="nature">🌿 Naturaleza</option>
+              <option value="dark">💜 Oscuridad</option>
+              <option value="holy">✨ Sagrado</option>
+            </select>
+            <span class="form-error" id="err-element"></span>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="hero-family">Familia</label>
+            <input class="form-control" type="text" id="hero-family" placeholder="Ej: Ninja, Slayer...">
+          </div>
+        </div>
 
-  /* OG tags */
-  const base = window.location.origin;
-  setMeta('og-title',       `${h.name} – Mini Kripta · Empires & Puzzles`);
-  setMeta('og-description', `${ELEMENT_LABELS[h.element] || ''} · Jodidez: ${'★'.repeat(h.ratingHard||0)} · Mola: ${'★'.repeat(h.ratingCool||0)}`);
-  setMeta('og-image',       h.imagePath ? `${base}${h.imagePath}` : '');
-  setMeta('og-url',         window.location.href);
+        <!-- RAREZA + CLASE -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div class="form-group">
+            <label class="form-label" for="hero-rarity">Rareza <span class="required">*</span></label>
+            <select class="form-control" id="hero-rarity" required>
+              <option value="">Seleccionar</option>
+              <option value="3">⭐⭐⭐ Raro</option>
+              <option value="4">⭐⭐⭐⭐ Épico</option>
+              <option value="5">⭐⭐⭐⭐⭐ Legendario</option>
+            </select>
+            <span class="form-error" id="err-rarity"></span>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="hero-class">Clase</label>
+            <select class="form-control" id="hero-class">
+              <option value="">Seleccionar</option>
+              <option value="Bárbaro">Bárbaro</option>
+              <option value="Clérigo">Clérigo</option>
+              <option value="Druida">Druida</option>
+              <option value="Explorador">Explorador</option>
+              <option value="Fighter">Guerrero</option>
+              <option value="Magician">Mago</option>
+              <option value="Monk">Monje</option>
+              <option value="Paladin">Paladín</option>
+              <option value="Ranger">Ranger</option>
+              <option value="Rogue">Pícaro</option>
+              <option value="Sorcerer">Hechicero</option>
+              <option value="Titan">Titán</option>
+              <option value="Wizard">Mago (Wizard)</option>
+            </select>
+          </div>
+        </div>
 
-  /* Imagen */
-  if (h.imagePath) {
-    const img = document.getElementById('hero-image');
-    img.src = h.imagePath;
-    img.alt = h.name;
-    document.getElementById('hero-no-image').classList.add('hidden');
-  } else {
-    document.getElementById('hero-image').classList.add('hidden');
-    document.getElementById('hero-no-image').classList.remove('hidden');
-  }
+        <!-- VELOCIDAD DE MANÁ + PODER -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div class="form-group">
+            <label class="form-label" for="hero-mana">Velocidad de maná</label>
+            <select class="form-control" id="hero-mana">
+              <option value="">Seleccionar</option>
+              <option value="Muy rápido">Muy rápido</option>
+              <option value="Rápido">Rápido</option>
+              <option value="Promedio">Promedio</option>
+              <option value="Lento">Lento</option>
+              <option value="Muy lento">Muy lento</option>
+              <option value="Carga">Carga</option>
+              <option value="Ninja">Ninja (x3)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="hero-power">Poder de equipo</label>
+            <input class="form-control" type="number" id="hero-power" placeholder="Ej: 970" min="0" max="2000">
+          </div>
+        </div>
 
-  /* Badges */
-  const elBadge = document.getElementById('hero-element-badge');
-  elBadge.textContent = ELEMENT_LABELS[h.element] || h.element;
-  elBadge.className = `element-badge ${ELEMENT_CLS[h.element] || ''}`;
+        <!-- STATS -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;">
+          <div class="form-group">
+            <label class="form-label" for="hero-atk">Ataque</label>
+            <input class="form-control" type="number" id="hero-atk" placeholder="Ej: 800">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="hero-def">Defensa</label>
+            <input class="form-control" type="number" id="hero-def" placeholder="Ej: 750">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="hero-hp">Vida</label>
+            <input class="form-control" type="number" id="hero-hp" placeholder="Ej: 1400">
+          </div>
+        </div>
 
-  if (h.family) {
-    document.getElementById('hero-family-badge').textContent = h.family;
-  } else {
-    document.getElementById('hero-family-badge').style.display = 'none';
-  }
+        <!-- HABILIDAD ESPECIAL -->
+        <div class="form-group">
+          <label class="form-label" for="hero-special-name">Nombre de la habilidad especial</label>
+          <input class="form-control" type="text" id="hero-special-name" placeholder="Ej: Golpe de las Sombras">
+        </div>
 
-  document.getElementById('hero-stars-badge').textContent = '⭐'.repeat(parseInt(h.rarity) || 0);
-  document.getElementById('hero-name').textContent = h.name;
-  document.getElementById('hero-meta').textContent =
-    `Añadido por ${h.createdBy || '?'} · ${formatDate(h.createdAt)}`;
+        <div class="form-group">
+          <label class="form-label" for="hero-special-desc">Descripción de la habilidad</label>
+          <textarea class="form-control" id="hero-special-desc" rows="3"
+            placeholder="Qué hace la habilidad especial..."></textarea>
+        </div>
 
-  /* Stats */
-  const statsGrid = document.getElementById('stats-grid');
-  const stats = [
-    { label: 'Clase',          value: h.heroClass   },
-    { label: 'Velocidad maná', value: h.manaSpeed   },
-    { label: 'Poder de equipo',value: h.power       },
-    { label: 'Ataque',         value: h.attack      },
-    { label: 'Defensa',        value: h.defense     },
-    { label: 'Vida',           value: h.health      },
-  ].filter(s => s.value);
+        <!-- VALORACIONES -->
+        <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:1rem;margin-bottom:1rem;">
+          <div class="flex gap-2" style="flex-wrap:wrap;">
+            <div class="rating-group flex-1">
+              <span class="rating-label">💀 Qué jodido es de vencer</span>
+              <div class="stars" id="rate-hard" data-value="0">
+                <span class="star" data-index="1">★</span>
+                <span class="star" data-index="2">★</span>
+                <span class="star" data-index="3">★</span>
+                <span class="star" data-index="4">★</span>
+                <span class="star" data-index="5">★</span>
+              </div>
+            </div>
+            <div class="rating-group flex-1">
+              <span class="rating-label">😎 Qué mola</span>
+              <div class="stars" id="rate-cool" data-value="0">
+                <span class="star" data-index="1">★</span>
+                <span class="star" data-index="2">★</span>
+                <span class="star" data-index="3">★</span>
+                <span class="star" data-index="4">★</span>
+                <span class="star" data-index="5">★</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
-  statsGrid.innerHTML = stats.map(s => `
-    <div class="stat-item">
-      <div class="stat-label">${s.label}</div>
-      <div class="stat-value">${s.value}</div>
-    </div>`).join('');
+        <!-- CÓMO VENCERLE -->
+        <div class="form-group">
+          <label class="form-label" for="hero-howtobeat">⚔ Cómo vencerle <span style="color:var(--text-muted);font-weight:400;">(opcional)</span></label>
+          <textarea class="form-control" id="hero-howtobeat" rows="3"
+            placeholder="Estrategias, héroes recomendados, formaciones..."></textarea>
+        </div>
 
-  /* Habilidad especial */
-  if (h.specialName || h.specialDesc) {
-    document.getElementById('special-name').textContent = h.specialName || '';
-    document.getElementById('special-desc').textContent = h.specialDesc || '';
-  } else {
-    document.getElementById('hero-special').style.display = 'none';
-  }
+        <!-- NOTAS -->
+        <div class="form-group">
+          <label class="form-label" for="hero-notes">📝 Notas del grupo <span style="color:var(--text-muted);font-weight:400;">(opcional)</span></label>
+          <textarea class="form-control" id="hero-notes" rows="3"
+            placeholder="Comentarios, anécdotas del combate..."></textarea>
+        </div>
 
-  /* Ratings */
-  renderStarsReadonly(document.getElementById('stars-hard'), h.ratingHard || 0, 'red');
-  renderStarsReadonly(document.getElementById('stars-cool'), h.ratingCool || 0, 'gold');
+        <!-- SUBMIT -->
+        <div class="flex gap-1 mt-2">
+          <a href="index.html" class="btn btn-ghost flex-1">Cancelar</a>
+          <button type="submit" class="btn btn-primary flex-1" id="submit-btn">
+            ⚔ Añadir infame
+          </button>
+        </div>
 
-  /* Notas */
-  if (h.notes) {
-    document.getElementById('notes-section').classList.remove('hidden');
-    document.getElementById('hero-notes').textContent = h.notes;
-  }
+      </form>
+    </div>
+  </main>
+</div>
 
-  /* Acciones edición — admin ve siempre, editor solo sus propios */
-  if (Auth.canEdit()) {
-    const editActions = document.getElementById('edit-actions');
-    const isOwner     = h.createdBy === Auth.getUsername();
-    const canModify   = Auth.isAdmin() || isOwner;
 
-    editActions.classList.remove('hidden');
-    document.getElementById('btn-edit').href = `hero-new.html?edit=${h.id}`;
+<!-- MODAL: Posible duplicado -->
+<div id="modal-duplicate" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:500;overflow-y:auto;padding:1rem;box-sizing:border-box;">
+  <div style="background:var(--bg-card);border:1px solid var(--border-gold);border-radius:16px;width:100%;max-width:380px;padding:1.75rem;margin:0 auto;box-sizing:border-box;">
+    <div class="modal-title">⚠️ Posible héroe duplicado</div>
+    <p class="text-secondary mb-2" style="font-size:0.9rem;">
+      Encontramos un héroe con un nombre similar ya guardado:
+    </p>
+    <div style="background:var(--bg-surface);border:1px solid var(--border-gold);border-radius:var(--radius-md);padding:1rem;display:flex;align-items:center;gap:1rem;margin-bottom:1.25rem;">
+      <img id="dup-hero-img" src="" alt="" style="width:64px;height:80px;object-fit:cover;object-position:top;border-radius:var(--radius-sm);flex-shrink:0;" class="hidden">
+      <div id="dup-hero-noimg" style="width:64px;height:80px;background:var(--bg-card);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;">⚔</div>
+      <div>
+        <div style="font-family:'Cinzel',serif;font-weight:600;font-size:0.95rem;" id="dup-hero-name"></div>
+        <div class="text-muted text-sm mt-1" id="dup-hero-element"></div>
+        <p style="font-size:0.78rem;color:var(--text-muted);margin-top:0.3rem;">
+          Posiblemente ya exista ese héroe.<br>Encontrada coincidencia guardada como "<span id="dup-hero-name-2" style="color:var(--gold);"></span>"
+        </p>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:0.5rem;margin-top:0.5rem;">
+      <button class="btn btn-primary w-full" id="dup-cancel">← Es el mismo, cancelar</button>
+      <button class="btn btn-ghost w-full" id="dup-continue">Es otro, continuar →</button>
+    </div>
+  </div>
+</div>
 
-    if (!canModify) {
-      /* Deshabilitar botones y mostrar aviso */
-      const btnEdit   = document.getElementById('btn-edit');
-      const btnDelete = document.getElementById('btn-delete');
+<div id="toast-container"></div>
 
-      btnEdit.style.opacity   = '0.4';
-      btnEdit.style.pointerEvents = 'none';
-      btnDelete.style.opacity = '0.4';
-      btnDelete.style.pointerEvents = 'none';
+<script src="js/auth.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/heroes.js"></script>
+<script src="js/hero-new.js"></script>
 
-      const notice = document.createElement('p');
-      notice.style.cssText = 'font-size:0.78rem;color:var(--text-muted);margin-top:0.5rem;';
-      notice.textContent    = `Este héroe fue añadido por ${h.createdBy || 'otro usuario'}. Solo puedes editar o eliminar tus propios héroes.`;
-      editActions.appendChild(notice);
-    }
-  }
-
-  /* Botón compartir */
-  document.getElementById('share-btn').addEventListener('click', shareHero);
-
-  /* Extras */
-  renderHowToBeat(h);
-  initComments(h);
-}
-
-function setMeta(id, content) {
-  const el = document.getElementById(id);
-  if (el) el.setAttribute('content', content);
-}
-
-/* ---- COMPARTIR ---- */
-function shareHero() {
-  if (!currentHero) return;
-  const url  = window.location.href;
-  const text = `☠️ Nuevo infame en Mini Kripta · Empires & Puzzles:\n*${currentHero.name}*\n${ELEMENT_LABELS[currentHero.element] || ''} · Jodidez: ${'★'.repeat(currentHero.ratingHard||0)}\n${url}`;
-
-  if (navigator.share) {
-    navigator.share({ title: `${currentHero.name} – Mini Kripta`, text, url })
-      .catch(() => {});
-  } else {
-    /* Fallback: copiar al portapapeles */
-    navigator.clipboard.writeText(text).then(() => {
-      showToast('Enlace copiado al portapapeles', 'info');
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
     });
   }
-}
-
-/* ---- ELIMINAR ---- */
-document.getElementById('btn-delete').addEventListener('click', () => {
-  document.getElementById('modal-delete').classList.add('open');
-});
-
-document.getElementById('cancel-delete').addEventListener('click', () => {
-  document.getElementById('modal-delete').classList.remove('open');
-});
-
-document.getElementById('confirm-delete').addEventListener('click', async () => {
-  try {
-    await HeroesAPI.remove(heroId);
-    showToast('Héroe eliminado', 'success');
-    setTimeout(() => window.location.href = 'index.html', 1000);
-  } catch (err) {
-    showToast(err.message, 'error');
-  } finally {
-    document.getElementById('modal-delete').classList.remove('open');
-  }
-});
-
-loadHero();
-
-/* ============================================================
-   CÓMO VENCERLE + COMENTARIOS
-   ============================================================ */
-
-function renderHowToBeat(h) {
-  if (h.howToBeat) {
-    document.getElementById('howtobeat-section').classList.remove('hidden');
-    document.getElementById('hero-howtobeat').textContent = h.howToBeat;
-  }
-}
-
-/* ---- COMENTARIOS ---- */
-function initComments(h) {
-  const btnAdd    = document.getElementById('btn-add-comment');
-  const formWrap  = document.getElementById('comment-form-wrap');
-  const noComment = document.getElementById('no-comments');
-  const list      = document.getElementById('comments-list');
-
-  if (Auth.isLoggedIn()) btnAdd.style.display = 'inline-flex';
-
-  /* Render comentarios existentes */
-  const comments = h.comments || [];
-  if (comments.length > 0) {
-    noComment.style.display = 'none';
-    list.innerHTML = comments.map(c => renderComment(c)).join('');
-  }
-
-  /* Añadir comentario */
-  btnAdd.addEventListener('click', () => {
-    formWrap.classList.remove('hidden');
-    btnAdd.style.display = 'none';
-    document.getElementById('comment-input').focus();
-  });
-
-  document.getElementById('cancel-comment').addEventListener('click', () => {
-    formWrap.classList.add('hidden');
-    btnAdd.style.display = 'inline-flex';
-    document.getElementById('comment-input').value = '';
-  });
-
-  document.getElementById('submit-comment').addEventListener('click', async () => {
-    const text = document.getElementById('comment-input').value.trim();
-    if (!text) return;
-
-    const btn = document.getElementById('submit-comment');
-    btn.disabled = true;
-
-    try {
-      const res = await fetch(`/api/heroes/${heroId}/comment`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json', 'x-username': Auth.getUsername() },
-        body:    JSON.stringify({ text })
-      });
-
-      if (!res.ok) throw new Error();
-
-      const updated = await res.json();
-      const newComments = updated.comments || [];
-
-      noComment.style.display = 'none';
-      list.innerHTML = newComments.map(c => renderComment(c)).join('');
-      formWrap.classList.add('hidden');
-      btnAdd.style.display = 'inline-flex';
-      document.getElementById('comment-input').value = '';
-      showToast('Comentario publicado', 'success');
-
-    } catch {
-      showToast('Error al publicar comentario', 'error');
-    } finally {
-      btn.disabled = false;
-    }
-  });
-}
-
-function renderComment(c) {
-  return `
-    <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:0.75rem;">
-      <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;">
-        <div style="width:24px;height:24px;border-radius:50%;background:var(--gold-dim);border:1px solid var(--border-gold);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:0.65rem;font-weight:600;color:var(--gold);">${(c.author||'?').charAt(0).toUpperCase()}</div>
-        <span style="font-size:0.82rem;font-weight:600;color:var(--text-secondary);">${escapeHtml(c.author||'')}</span>
-        <span style="font-size:0.75rem;color:var(--text-muted);margin-left:auto;">${formatDate(c.createdAt)}</span>
-      </div>
-      <p style="font-size:0.9rem;color:var(--text-primary);line-height:1.5;">${escapeHtml(c.text||'')}</p>
-    </div>`;
-}
-
-function escapeHtml(str) {
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
+</script>
+</body>
+</html>
