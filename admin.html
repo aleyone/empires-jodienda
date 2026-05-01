@@ -1,149 +1,162 @@
-/* ============================================================
-   login.js — Lógica de la página de login
-   ============================================================ */
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de usuarios – Mini Kripta · Empires &amp; Puzzles</title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/img/favicon-16.png">
+  <link rel="apple-touch-icon" href="/img/icon-192.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#c9952a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mini Kripta">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
 
-/* Si ya hay sesión, redirigir — respetando returnUrl si existe */
-if (Auth.isLoggedIn()) {
-  const returnUrl = new URLSearchParams(window.location.search).get('returnUrl');
-  window.location.href = returnUrl || 'index.html';
-}
+<div class="page-wrapper">
 
-/* ---- Mostrar/ocultar contraseña ---- */
-document.getElementById('toggle-pass').addEventListener('click', () => {
-  const inp = document.getElementById('password');
-  inp.type = inp.type === 'password' ? 'text' : 'password';
-});
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="container navbar-inner">
+      <a href="index.html" style="text-decoration:none;display:flex;flex-direction:row;align-items:center;gap:0.6rem;">
+        <img src="/img/logo-48.png" alt="Mini Kripta" style="width:32px;height:32px;object-fit:contain;flex-shrink:0;display:block;">
+        <span style="font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:2px;color:var(--gold);text-transform:uppercase;white-space:nowrap;">Empires &amp; Puzzles</span>
+        <span style="color:var(--text-muted);font-size:0.7rem;">·</span>
+        <span style="font-family:'Cinzel',serif;font-size:1rem;font-weight:700;color:var(--text-primary);white-space:nowrap;">Mini <span style="color:var(--gold);">Kripta</span></span>
+      </a>
+      <div class="navbar-actions">
+        <a href="index.html" class="btn btn-ghost btn-sm">← Volver</a>
+      </div>
+    </div>
+  </nav>
 
-/* ---- FORM LOGIN ---- */
-document.getElementById('login-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  clearErrors();
+  <main>
+    <div class="container" style="max-width:720px;">
 
-  const usernameOrEmail = document.getElementById('username').value.trim().toLowerCase();
-  const password        = document.getElementById('password').value;
-  const btn             = document.getElementById('login-btn');
+      <div class="section-header mb-3">
+        <span class="section-title">⚙️ Gestión de usuarios</span>
+        <button class="btn btn-primary btn-sm" id="btn-new-user">+ Nuevo usuario</button>
+      </div>
 
-  if (!usernameOrEmail) return showFieldError('err-username', 'Introduce tu usuario o email');
-  if (!password)        return showFieldError('err-password', 'Introduce tu contraseña');
+      <!-- TABLA USUARIOS -->
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;" id="users-table">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border-gold);">
+              <th style="text-align:left;padding:0.6rem 0.75rem;font-size:0.78rem;color:var(--text-muted);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;">Usuario</th>
+              <th style="text-align:left;padding:0.6rem 0.75rem;font-size:0.78rem;color:var(--text-muted);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;">Email</th>
+              <th style="text-align:left;padding:0.6rem 0.75rem;font-size:0.78rem;color:var(--text-muted);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;">Rol</th>
+              <th style="text-align:left;padding:0.6rem 0.75rem;font-size:0.78rem;color:var(--text-muted);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;">Estado</th>
+              <th style="text-align:right;padding:0.6rem 0.75rem;font-size:0.78rem;color:var(--text-muted);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody">
+            <!-- Se rellena con JS -->
+          </tbody>
+        </table>
+      </div>
 
-  btn.disabled    = true;
-  btn.textContent = 'Verificando...';
+    </div>
+  </main>
+</div>
 
-  try {
-    const res = await fetch('/api/login', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ usernameOrEmail, password })
+<!-- MODAL: Crear / Editar usuario -->
+<div class="modal-backdrop" id="modal-user">
+  <div class="modal">
+    <button class="modal-close" id="close-modal-user">✕</button>
+    <div class="modal-title" id="modal-user-title">Nuevo usuario</div>
+    <form id="user-form" novalidate>
+      <input type="hidden" id="edit-username-original">
+
+      <div class="form-group">
+        <label class="form-label" for="u-username">Nombre de usuario <span class="required">*</span></label>
+        <input class="form-control" type="text" id="u-username" placeholder="sin espacios, minúsculas" required>
+        <span class="form-error" id="err-u-username"></span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="u-email">Email</label>
+        <input class="form-control" type="email" id="u-email" placeholder="correo@ejemplo.com">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="u-role">Rol <span class="required">*</span></label>
+        <select class="form-control" id="u-role" required>
+          <option value="consultant">Consultor (solo ver)</option>
+          <option value="editor">Editor (subir y editar héroes)</option>
+          <option value="admin">Admin (control total)</option>
+        </select>
+      </div>
+
+      <div class="form-group" id="pass-group">
+        <label class="form-label" for="u-password">Contraseña inicial <span class="required">*</span></label>
+        <input class="form-control" type="password" id="u-password" placeholder="mínimo 6 caracteres">
+        <span class="form-hint">El usuario deberá cambiarla en su primer acceso.</span>
+        <span class="form-error" id="err-u-password"></span>
+      </div>
+
+      <div class="flex gap-1 mt-2">
+        <button type="button" class="btn btn-ghost flex-1" id="cancel-user-modal">Cancelar</button>
+        <button type="submit" class="btn btn-primary flex-1" id="save-user-btn">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: Reset contraseña -->
+<div class="modal-backdrop" id="modal-reset-pass">
+  <div class="modal" style="max-width:380px;">
+    <button class="modal-close" id="close-reset-pass">✕</button>
+    <div class="modal-title">🔑 Resetear contraseña</div>
+    <p class="text-secondary mb-2" style="font-size:0.9rem;">
+      Introduce una nueva contraseña para <strong id="reset-username-label"></strong>.
+      El usuario deberá cambiarla en su próximo acceso.
+    </p>
+    <form id="reset-pass-form" novalidate>
+      <input type="hidden" id="reset-target-user">
+      <div class="form-group">
+        <label class="form-label" for="new-pass-admin">Nueva contraseña <span class="required">*</span></label>
+        <input class="form-control" type="password" id="new-pass-admin" placeholder="mínimo 6 caracteres" required>
+        <span class="form-error" id="err-new-pass-admin"></span>
+      </div>
+      <div class="flex gap-1 mt-1">
+        <button type="button" class="btn btn-ghost flex-1" id="cancel-reset-pass">Cancelar</button>
+        <button type="submit" class="btn btn-primary flex-1">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: Confirmar borrado usuario -->
+<div class="modal-backdrop" id="modal-delete-user">
+  <div class="modal" style="max-width:360px;">
+    <div class="modal-title">⚠️ Eliminar usuario</div>
+    <p class="text-secondary mb-3" style="font-size:0.9rem;">
+      ¿Seguro que quieres eliminar al usuario <strong id="delete-username-label"></strong>?
+    </p>
+    <div class="flex gap-1">
+      <button class="btn btn-ghost flex-1" id="cancel-delete-user">Cancelar</button>
+      <button class="btn btn-danger flex-1" id="confirm-delete-user">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="js/auth.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/admin.js"></script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
     });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      showGlobalError(data.error || 'Usuario o contraseña incorrectos');
-      return;
-    }
-
-    if (data.firstLogin) {
-      sessionStorage.setItem('mk_pending_user', JSON.stringify(data.user));
-      openModal('modal-first-login');
-    } else {
-      Auth.setSession(data.user);
-      /* Redirigir a la URL de origen si existe */
-      const returnUrl = new URLSearchParams(window.location.search).get('returnUrl');
-      window.location.href = returnUrl ? decodeURIComponent(returnUrl) : 'index.html';
-    }
-
-  } catch (err) {
-    showGlobalError('Error de conexión. Inténtalo de nuevo.');
-  } finally {
-    btn.disabled    = false;
-    btn.textContent = 'Entrar al reino';
   }
-});
-
-/* ---- MODAL: Primer acceso ---- */
-document.getElementById('first-login-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  clearErrors();
-
-  const email   = document.getElementById('fl-email').value.trim();
-  const newpass = document.getElementById('fl-newpass').value;
-  const confirm = document.getElementById('fl-confirm').value;
-  const pending = JSON.parse(sessionStorage.getItem('mk_pending_user') || 'null');
-
-  if (!email)   return showFieldError('err-fl-email', 'El email es obligatorio');
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-                return showFieldError('err-fl-email', 'Email no válido');
-  if (!newpass) return showFieldError('err-fl-newpass', 'Introduce una contraseña');
-  if (newpass.length < 6) return showFieldError('err-fl-newpass', 'Mínimo 6 caracteres');
-  if (newpass !== confirm) return showFieldError('err-fl-confirm', 'Las contraseñas no coinciden');
-  if (!pending) return showGlobalError('Sesión expirada, vuelve a iniciar sesión');
-
-  try {
-    const res = await fetch('/api/users/first-login', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ username: pending.username, email, newPassword: newpass })
-    });
-
-    const data = await res.json();
-    if (!res.ok) return showGlobalError(data.error || 'Error al guardar');
-
-    sessionStorage.removeItem('mk_pending_user');
-    Auth.setSession({ ...pending, email });
-
-    const returnUrl = new URLSearchParams(window.location.search).get('returnUrl');
-    window.location.href = returnUrl ? decodeURIComponent(returnUrl) : 'index.html';
-
-  } catch {
-    showGlobalError('Error de conexión.');
-  }
-});
-
-/* ---- Olvidé contraseña ---- */
-document.getElementById('forgot-link').addEventListener('click', (e) => {
-  e.preventDefault();
-  openModal('modal-forgot');
-});
-
-document.getElementById('close-forgot').addEventListener('click', () => closeModal('modal-forgot'));
-
-document.getElementById('forgot-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const usernameOrEmail = document.getElementById('forgot-username').value.trim().toLowerCase();
-  if (!usernameOrEmail) return showFieldError('err-forgot', 'Introduce tu usuario o email');
-
-  try {
-    await fetch('/api/users/forgot-password', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ usernameOrEmail })
-    });
-    document.getElementById('forgot-ok').classList.remove('hidden');
-    document.getElementById('forgot-form').classList.add('hidden');
-  } catch {
-    showFieldError('err-forgot', 'Error de conexión.');
-  }
-});
-
-/* ---- Helpers ---- */
-function openModal(id)  { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-
-function showFieldError(id, msg) {
-  const el = document.getElementById(id);
-  if (el) { el.textContent = msg; el.classList.add('visible'); }
-}
-
-function showGlobalError(msg) {
-  const el = document.getElementById('login-error');
-  if (el) { el.textContent = msg; el.style.display = 'block'; }
-}
-
-function clearErrors() {
-  document.querySelectorAll('.form-error').forEach(e => {
-    e.textContent = ''; e.classList.remove('visible');
-  });
-  const ge = document.getElementById('login-error');
-  if (ge) ge.style.display = 'none';
-}
+</script>
+</body>
+</html>

@@ -1,142 +1,311 @@
-/* ============================================================
-   auth.js — Gestión de sesión y roles
-   Sesión persiste mientras el navegador esté abierto.
-   Se destruye al hacer logout o al cerrar el navegador.
-   ============================================================ */
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Héroe – Mini Kripta · Empires &amp; Puzzles</title>
 
-const Auth = (() => {
+  <!-- Open Graph / WhatsApp preview - se rellena dinámicamente con JS -->
+  <meta property="og:type"        content="website">
+  <meta property="og:site_name"   content="Mini Kripta · Empires &amp; Puzzles">
+  <meta property="og:title"       id="og-title"       content="">
+  <meta property="og:description" id="og-description" content="">
+  <meta property="og:image"       id="og-image"       content="">
+  <meta property="og:url"         id="og-url"         content="">
+  <meta name="twitter:card" content="summary_large_image">
 
-  const SESSION_KEY = 'mk_session';
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/img/favicon-16.png">
+  <link rel="apple-touch-icon" href="/img/icon-192.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#c9952a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mini Kripta">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .hero-detail-image {
+      width: 100%;
+      max-height: 420px;
+      object-fit: cover;
+      object-position: top;
+      border-radius: var(--radius-lg);
+      display: block;
+    }
 
-  /* Usamos sessionStorage (muere al cerrar pestaña/navegador)
-     pero lo sincronizamos con localStorage para que sobreviva
-     entre pestañas del mismo navegador mientras esté abierto */
-  function getSession() {
-    try {
-      /* Intentar sessionStorage primero */
-      let raw = sessionStorage.getItem(SESSION_KEY);
-      if (!raw) {
-        /* Recuperar de localStorage si hay sesión activa en otra pestaña */
-        raw = localStorage.getItem(SESSION_KEY);
-        if (raw) sessionStorage.setItem(SESSION_KEY, raw);
+    .hero-detail-header {
+      margin-top: 1rem;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+    }
+
+    .stat-item {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 0.65rem 0.9rem;
+    }
+
+    .stat-label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 0.15rem;
+    }
+
+    .stat-value {
+      font-size: 0.95rem;
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .hero-special {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-gold);
+      border-left: 3px solid var(--gold);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+    }
+
+    .hero-special-name {
+      font-family: 'Cinzel', serif;
+      font-size: 0.85rem;
+      color: var(--gold);
+      margin-bottom: 0.4rem;
+    }
+
+    .hero-special-desc {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .notes-box {
+      background: rgba(201,149,42,0.06);
+      border: 1px solid var(--border-gold);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+    }
+
+    .notes-box p {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      font-style: italic;
+    }
+
+    .share-btn {
+      width: 100%;
+      background: rgba(37, 211, 102, 0.1);
+      border: 1px solid rgba(37, 211, 102, 0.35);
+      color: #4ddb88;
+      border-radius: var(--radius-md);
+      padding: 0.75rem;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      font-family: 'Nunito', sans-serif;
+      transition: all 0.2s;
+    }
+    .share-btn:hover {
+      background: rgba(37, 211, 102, 0.18);
+    }
+
+    @media (min-width: 640px) {
+      .hero-layout {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 1.5rem;
+        align-items: start;
       }
-      return raw ? JSON.parse(raw) : null;
-    } catch { return null; }
-  }
+    }
+  </style>
+</head>
+<body>
 
-  function setSession(user) {
-    const data = JSON.stringify({
-      username: user.username,
-      role:     user.role,
-      email:    user.email || ''
+<div class="page-wrapper">
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="container navbar-inner">
+      <a href="index.html" style="text-decoration:none;display:flex;flex-direction:row;align-items:center;gap:0.6rem;">
+        <img src="/img/logo-48.png" alt="Mini Kripta" style="width:32px;height:32px;object-fit:contain;flex-shrink:0;display:block;">
+        <span style="font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:2px;color:var(--gold);text-transform:uppercase;white-space:nowrap;">Empires &amp; Puzzles</span>
+        <span style="color:var(--text-muted);font-size:0.7rem;">·</span>
+        <span style="font-family:'Cinzel',serif;font-size:1rem;font-weight:700;color:var(--text-primary);white-space:nowrap;">Mini <span style="color:var(--gold);">Kripta</span></span>
+      </a>
+      <div class="navbar-actions">
+        <a href="index.html" class="btn btn-ghost btn-sm">← Volver</a>
+        <div style="position:relative;">
+          <button id="nav-menu-btn" class="btn btn-ghost btn-sm flex items-center gap-1" style="padding:0.35rem 0.6rem;">
+            <div class="user-avatar" id="nav-avatar">?</div>
+            <span style="font-size:0.6rem;color:var(--text-muted);">▼</span>
+          </button>
+          <div class="navbar-menu" id="navbar-menu">
+            <a href="profile.html">Mi perfil</a>
+            <a href="admin.html" id="menu-admin" style="display:none;">Gestión usuarios</a>
+            <button id="btn-logout">Cerrar sesión</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="container" style="max-width:760px;">
+
+      <div id="hero-loading" class="empty-state">
+        <span class="empty-state-icon">⚔</span>
+        <p class="empty-state-title">Invocando al infame...</p>
+      </div>
+
+      <div id="hero-content" class="hidden">
+
+        <div class="hero-layout">
+          <!-- IMAGEN -->
+          <div>
+            <img id="hero-image" class="hero-detail-image" src="" alt="">
+            <div id="hero-no-image" class="hidden" style="width:100%;aspect-ratio:3/4;background:var(--bg-surface);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;font-size:5rem;">⚔</div>
+
+            <!-- RATINGS (vista) -->
+            <div style="margin-top:1rem;background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:1rem;display:flex;flex-direction:column;gap:0.75rem;">
+              <div class="rating-group">
+                <span class="rating-label">💀 Qué jodido es</span>
+                <div class="stars stars-readonly" id="stars-hard"></div>
+              </div>
+              <div class="rating-group">
+                <span class="rating-label">😎 Qué mola</span>
+                <div class="stars stars-readonly" id="stars-cool"></div>
+              </div>
+            </div>
+
+            <!-- COMPARTIR -->
+            <div style="margin-top:0.75rem;">
+              <button class="share-btn" id="share-btn">
+                📤 Compartir este infame
+              </button>
+            </div>
+          </div>
+
+          <!-- INFO -->
+          <div>
+            <div class="hero-detail-header">
+              <div class="flex items-center gap-1 mb-1 flex-wrap">
+                <span id="hero-element-badge" class="element-badge"></span>
+                <span id="hero-family-badge" class="badge role-badge"></span>
+                <span id="hero-stars-badge" style="font-size:0.85rem;"></span>
+              </div>
+              <h1 id="hero-name" style="margin-bottom:0.5rem;"></h1>
+              <p class="text-muted text-xs" id="hero-meta"></p>
+            </div>
+
+            <!-- STATS -->
+            <div class="section-header mt-3">
+              <span class="section-title">Características</span>
+            </div>
+            <div class="stats-grid" id="stats-grid">
+              <!-- se rellena con JS -->
+            </div>
+
+            <!-- HABILIDAD ESPECIAL -->
+            <div class="section-header mt-3">
+              <span class="section-title">Habilidad especial</span>
+            </div>
+            <div class="hero-special" id="hero-special">
+              <div class="hero-special-name" id="special-name"></div>
+              <p class="hero-special-desc" id="special-desc"></p>
+            </div>
+
+            <!-- CÓMO VENCERLE -->
+            <div id="howtobeat-section" class="mt-3 hidden">
+              <div class="section-header">
+                <span class="section-title">⚔ Cómo vencerle</span>
+              </div>
+              <div class="notes-box" style="border-color:rgba(94,196,94,0.3);background:rgba(94,196,94,0.05);">
+                <p id="hero-howtobeat" style="color:#70d470;"></p>
+              </div>
+            </div>
+
+            <!-- NOTAS DEL GRUPO -->
+            <div id="notes-section" class="mt-3 hidden">
+              <div class="section-header">
+                <span class="section-title">📝 Notas del grupo</span>
+              </div>
+              <div class="notes-box">
+                <p id="hero-notes"></p>
+              </div>
+            </div>
+
+            <!-- COMENTARIOS -->
+            <div class="mt-3">
+              <div class="section-header">
+                <span class="section-title">💬 Comentarios</span>
+                <button class="btn btn-secondary btn-sm" id="btn-add-comment" style="display:none;">+ Añadir</button>
+              </div>
+              <div id="comments-list" style="display:flex;flex-direction:column;gap:0.5rem;">
+                <p class="text-muted text-sm" id="no-comments">Sin comentarios aún.</p>
+              </div>
+              <div id="comment-form-wrap" class="hidden mt-2">
+                <textarea class="form-control" id="comment-input" rows="2" placeholder="Tu comentario..."></textarea>
+                <div class="flex gap-1 mt-1">
+                  <button class="btn btn-ghost btn-sm" id="cancel-comment">Cancelar</button>
+                  <button class="btn btn-primary btn-sm" id="submit-comment">Publicar</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- ACCIONES admin/editor -->
+            <div id="edit-actions" class="hidden mt-3 flex gap-1">
+              <a id="btn-edit" href="#" class="btn btn-secondary btn-sm">✏️ Editar</a>
+              <button id="btn-delete" class="btn btn-danger btn-sm">🗑 Eliminar</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- MODAL confirmar borrado -->
+<div class="modal-backdrop" id="modal-delete">
+  <div class="modal" style="max-width:360px;">
+    <div class="modal-title">⚠️ Eliminar héroe</div>
+    <p class="text-secondary mb-3" style="font-size:0.9rem;">
+      ¿Seguro que quieres eliminar este infame? Esta acción no se puede deshacer.
+    </p>
+    <div class="flex gap-1">
+      <button class="btn btn-ghost flex-1" id="cancel-delete">Cancelar</button>
+      <button class="btn btn-danger flex-1" id="confirm-delete">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="js/auth.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/heroes.js"></script>
+<script src="js/hero-detail.js"></script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
     });
-    sessionStorage.setItem(SESSION_KEY, data);
-    localStorage.setItem(SESSION_KEY, data);
-
-    /* Registrar que hay una sesión activa en esta pestaña */
-    _registerTab();
   }
-
-  function clearSession() {
-    sessionStorage.removeItem(SESSION_KEY);
-    localStorage.removeItem(SESSION_KEY);
-    localStorage.removeItem('mk_tabs');
-  }
-
-  /* ---- Control de pestañas abiertas ---- */
-  function _registerTab() {
-    const tabId = sessionStorage.getItem('mk_tab_id') || Math.random().toString(36).slice(2);
-    sessionStorage.setItem('mk_tab_id', tabId);
-    const tabs = JSON.parse(localStorage.getItem('mk_tabs') || '[]');
-    if (!tabs.includes(tabId)) tabs.push(tabId);
-    localStorage.setItem('mk_tabs', JSON.stringify(tabs));
-  }
-
-  function _unregisterTab() {
-    const tabId = sessionStorage.getItem('mk_tab_id');
-    if (!tabId) return;
-    let tabs = JSON.parse(localStorage.getItem('mk_tabs') || '[]');
-    tabs = tabs.filter(t => t !== tabId);
-    localStorage.setItem('mk_tabs', JSON.stringify(tabs));
-    /* Si no quedan pestañas abiertas, destruir la sesión */
-    if (tabs.length === 0) {
-      localStorage.removeItem(SESSION_KEY);
-      localStorage.removeItem('mk_tabs');
-    }
-  }
-
-  /* Limpiar sesión al cerrar la pestaña */
-  window.addEventListener('beforeunload', _unregisterTab);
-
-  /* ---- API pública ---- */
-  function isLoggedIn() { return !!getSession(); }
-  function getRole()     { return getSession()?.role || null; }
-  function getUsername() { return getSession()?.username || null; }
-  function isAdmin()     { return getRole() === 'admin'; }
-  function isEditor()    { return getRole() === 'editor' || isAdmin(); }
-  function canEdit()     { return isEditor(); }
-
-  function requireAuth() {
-    if (!isLoggedIn()) {
-      const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
-      window.location.href = `login.html?returnUrl=${returnUrl}`;
-      return false;
-    }
-    _registerTab();
-    return true;
-  }
-
-  function requireAdmin() {
-    if (!requireAuth()) return false;
-    if (!isAdmin()) { window.location.href = 'index.html'; return false; }
-    return true;
-  }
-
-  function requireEditor() {
-    if (!requireAuth()) return false;
-    if (!canEdit()) { window.location.href = 'index.html'; return false; }
-    return true;
-  }
-
-  function initNavbar() {
-    const session = getSession();
-    if (!session) return;
-
-    const avatar    = document.getElementById('nav-avatar');
-    const username  = document.getElementById('nav-username');
-    const menuBtn   = document.getElementById('nav-menu-btn');
-    const menu      = document.getElementById('navbar-menu');
-    const menuAdmin = document.getElementById('menu-admin');
-    const btnAdd    = document.getElementById('btn-add-hero');
-    const btnLogout = document.getElementById('btn-logout');
-
-    if (avatar)   avatar.textContent = session.username.charAt(0).toUpperCase();
-    if (username) username.textContent = session.username;
-    if (menuAdmin && isAdmin()) menuAdmin.style.display = 'block';
-    if (btnAdd && canEdit())    btnAdd.style.display = 'inline-flex';
-
-    if (menuBtn && menu) {
-      menuBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        menu.classList.toggle('open');
-      });
-      document.addEventListener('click', () => menu.classList.remove('open'));
-    }
-
-    if (btnLogout) {
-      btnLogout.addEventListener('click', () => {
-        clearSession();
-        window.location.href = 'login.html';
-      });
-    }
-  }
-
-  return {
-    getSession, setSession, clearSession,
-    isLoggedIn, getRole, getUsername,
-    isAdmin, isEditor, canEdit,
-    requireAuth, requireAdmin, requireEditor,
-    initNavbar
-  };
-
-})();
+</script>
+</body>
+</html>
