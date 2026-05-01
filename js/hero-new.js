@@ -416,9 +416,9 @@ function showWikiModal(data) {
 }
 
 /* ---- Importar datos al formulario ---- */
-document.getElementById('wiki-import-btn').addEventListener('click', () => {
+document.getElementById('wiki-import-btn').addEventListener('click', async () => {
   if (!wikiData) return;
-  fillFormFromWiki(wikiData);
+  await fillFormFromWiki(wikiData);
   document.getElementById('modal-wiki').style.display = 'none';
   wikiData = null;
 });
@@ -429,7 +429,7 @@ document.getElementById('wiki-cancel-btn').addEventListener('click', () => {
   wikiData = null;
 });
 
-function fillFormFromWiki(data) {
+async function fillFormFromWiki(data) {
   if (data.element)     document.getElementById('hero-element').value      = data.element;
   if (data.rarity)      document.getElementById('hero-rarity').value       = data.rarity;
   if (data.heroClass)   document.getElementById('hero-class').value        = data.heroClass;
@@ -448,5 +448,50 @@ function fillFormFromWiki(data) {
   });
   document.querySelectorAll('.form-control.error').forEach(e => e.classList.remove('error'));
 
+  /* Importar imagen de la wiki si existe y no hay imagen subida ya */
+  if (data.imageUrl && !compressedBlob) {
+    await importWikiImage(data.imageUrl);
+  }
+
   showToast('Datos importados desde la wiki ✓', 'success');
+}
+
+async function importWikiImage(imageUrl) {
+  const hint     = document.getElementById('img-size-hint');
+  const preview  = document.getElementById('upload-preview');
+  const progress = document.getElementById('upload-progress');
+  const bar      = document.getElementById('progress-bar');
+
+  try {
+    hint.textContent = '⏳ Descargando imagen de la wiki...';
+    progress.classList.remove('hidden');
+    bar.style.width = '30%';
+
+    /* Descargar imagen via proxy para evitar CORS */
+    const res = await fetch(`/api/image-proxy?url=${encodeURIComponent(imageUrl)}`);
+    if (!res.ok) throw new Error('No se pudo descargar la imagen');
+
+    bar.style.width = '60%';
+    const blob = await res.blob();
+    const file = new File([blob], 'wiki-hero.jpg', { type: blob.type || 'image/jpeg' });
+
+    /* Comprimir igual que una imagen subida manualmente */
+    const result = await compressImage(file, 400);
+    compressedBlob = result.blob;
+    compressedBlob._ext = result.isPng ? 'png' : 'jpg';
+
+    bar.style.width = '100%';
+    const kb = Math.round(result.size / 1024);
+    hint.textContent = `✓ Imagen de la wiki lista · ${kb} KB`;
+
+    preview.src = result.url;
+    preview.classList.add('visible');
+
+    setTimeout(() => progress.classList.add('hidden'), 800);
+
+  } catch (err) {
+    hint.textContent = 'No se pudo importar la imagen. Puedes subirla manualmente.';
+    progress.classList.add('hidden');
+    console.warn('[importWikiImage]', err.message);
+  }
 }
