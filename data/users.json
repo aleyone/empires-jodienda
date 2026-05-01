@@ -6,7 +6,8 @@
       "email": "aleyone@gmail.com",
       "role": "admin",
       "firstLogin": false,
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "lastSeenVersion": "1.6"
     },
     {
       "username": "adrian",
