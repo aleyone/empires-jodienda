@@ -26,16 +26,33 @@ module.exports = async (req, res) => {
       return res.status(404).json({ error: `"${heroName}" no existe en la wiki` });
     }
 
-    const wikitext = page?.revisions?.[0]?.slots?.main?.['*'] || '';
-    if (!wikitext) return res.status(404).json({ error: 'Sin datos en la wiki' });
+    const fullWikitext = page?.revisions?.[0]?.slots?.main?.['*'] || '';
+    if (!fullWikitext) return res.status(404).json({ error: 'Sin datos en la wiki' });
 
-    return res.status(200).json(parseHeroWikitext(wikitext, heroName));
+    /* Solo usar el primer bloque {{Hero}} — ignorar costumes */
+    const firstHeroBlock = extractFirstHeroBlock(fullWikitext);
+
+    return res.status(200).json(parseHeroWikitext(firstHeroBlock, heroName));
 
   } catch (err) {
     console.error('[hero-lookup]', err.message);
     return res.status(503).json({ error: 'Error al conectar con la wiki. Rellena manualmente.' });
   }
 };
+
+/* ---- Extrae solo el primer bloque {{Hero}} ---- */
+function extractFirstHeroBlock(wikitext) {
+  /* Encontrar primer {{Hero y cortar antes del segundo */
+  const firstIdx = wikitext.indexOf('{{Hero');
+  if (firstIdx === -1) return wikitext;
+
+  /* Buscar el siguiente {{Hero que no sea el primero */
+  const secondIdx = wikitext.indexOf('{{Hero', firstIdx + 6);
+  if (secondIdx === -1) return wikitext; /* solo hay uno */
+
+  /* Devolver desde el inicio hasta antes del segundo {{Hero */
+  return wikitext.slice(0, secondIdx);
+}
 
 /* ---- PARSER ---- */
 function parseHeroWikitext(wikitext, heroName) {
@@ -103,17 +120,17 @@ function parseHeroWikitext(wikitext, heroName) {
   const classRaw = field('class');
   const classMatch = classRaw?.match(/\{\{cl\|(\w+)\}\}/i) || classRaw?.match(/(\w+)/);
   const classMap = {
-    barbarian:'Bárbaro', bar:'Bárbaro',
-    cleric:'Clérigo', cle:'Clérigo',
-    druid:'Druida', dru:'Druida',
-    fighter:'Guerrero', fig:'Guerrero',
-    monk:'Monje', mon:'Monje',
-    paladin:'Paladín', pal:'Paladín',
-    ranger:'Ranger', ran:'Ranger',
-    rogue:'Pícaro', rog:'Pícaro',
-    sorcerer:'Hechicero', sor:'Hechicero',
-    wizard:'Mago (Wizard)', wiz:'Mago (Wizard)',
-    titan:'Titán', tit:'Titán'
+    barbarian:'Bárbaro', bar:'Bárbaro', brb:'Bárbaro',
+    cleric:'Clérigo', cle:'Clérigo', clr:'Clérigo',
+    druid:'Druida', dru:'Druida', drd:'Druida',
+    fighter:'Guerrero', fig:'Guerrero', fgt:'Guerrero',
+    monk:'Monje', mon:'Monje', mnk:'Monje',
+    paladin:'Paladín', pal:'Paladín', pld:'Paladín',
+    ranger:'Ranger', ran:'Ranger', rng:'Ranger',
+    rogue:'Pícaro', rog:'Pícaro', rog:'Pícaro',
+    sorcerer:'Hechicero', sor:'Hechicero', src:'Hechicero',
+    wizard:'Mago (Wizard)', wiz:'Mago (Wizard)', wzd:'Mago (Wizard)',
+    titan:'Titán', tit:'Titán', ttn:'Titán'
   };
   if (classMatch) result.heroClass = classMap[classMatch[1].toLowerCase()] || classMatch[1];
   if (!result.heroClass) {
@@ -135,6 +152,7 @@ function parseHeroWikitext(wikitext, heroName) {
   const famMatch = familyRaw?.match(/\{\{family\|(\w+)\}\}/i);
   const famMap = {
     nin:'Ninja', ninja:'Ninja',
+    cls:'Classic', classic:'Classic',
     classic:'Classic', cla:'Classic',
     atl:'Atlantis', atlantis:'Atlantis',
     val:'Valhalla', valhalla:'Valhalla',
@@ -188,10 +206,11 @@ function parseHeroWikitext(wikitext, heroName) {
   const attack  = field('attack');
   const defense = field('defense');
   const health  = field('health');
-  if (power   && /^\d+$/.test(power.trim()))   result.power   = power.trim();
-  if (attack  && /^\d+$/.test(attack.trim()))  result.attack  = attack.trim();
-  if (defense && /^\d+$/.test(defense.trim())) result.defense = defense.trim();
-  if (health  && /^\d+$/.test(health.trim()))  result.health  = health.trim();
+  const stripNum = (s) => s ? s.replace(/,/g,'').trim() : null;
+  if (power   && /^\d+$/.test(stripNum(power)))   result.power   = stripNum(power);
+  if (attack  && /^\d+$/.test(stripNum(attack)))  result.attack  = stripNum(attack);
+  if (defense && /^\d+$/.test(stripNum(defense))) result.defense = stripNum(defense);
+  if (health  && /^\d+$/.test(stripNum(health)))  result.health  = stripNum(health);
 
   /* ---- NOMBRE HABILIDAD — special_name ---- */
   const skillName = field('special_name') || field('skill') || field('skillname');
