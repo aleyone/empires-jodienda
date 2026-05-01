@@ -129,6 +129,38 @@ const Auth = (() => {
         window.location.href = 'login.html';
       });
     }
+
+    /* ---- Campana de notificaciones ---- */
+    const notifBtn      = document.getElementById('notif-btn');
+    const notifDropdown = document.getElementById('notif-dropdown');
+    const notifMarkAll  = document.getElementById('notif-mark-all');
+
+    if (notifBtn && notifDropdown) {
+      notifBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = notifDropdown.classList.contains('open');
+        notifDropdown.classList.toggle('open');
+        if (!isOpen && typeof Notifications !== 'undefined') {
+          Notifications.renderList(document.getElementById('notif-list'));
+        }
+      });
+      document.addEventListener('click', () => notifDropdown.classList.remove('open'));
+    }
+
+    if (notifMarkAll) {
+      notifMarkAll.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if (typeof Notifications !== 'undefined') {
+          await Notifications.markAllRead();
+          Notifications.renderList(document.getElementById('notif-list'));
+        }
+      });
+    }
+
+    /* Cargar notificaciones al iniciar */
+    if (typeof Notifications !== 'undefined') {
+      Notifications.load();
+    }
   }
 
   return {

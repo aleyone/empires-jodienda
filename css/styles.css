@@ -127,24 +127,40 @@ main {
 
 .navbar-brand {
   display: flex;
-  flex-direction: column;
-  line-height: 1.1;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.6rem;
+  line-height: 1;
+}
+
+.navbar-brand img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  flex-shrink: 0;
+  display: block;
 }
 
 .navbar-brand .brand-mini {
   font-family: 'Cinzel', serif;
-  font-size: 0.65rem;
-  letter-spacing: 3px;
+  font-size: 0.6rem;
+  letter-spacing: 2px;
   color: var(--gold);
   text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.navbar-brand .brand-sep {
+  color: var(--text-muted);
+  font-size: 0.7rem;
 }
 
 .navbar-brand .brand-name {
   font-family: 'Cinzel', serif;
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--text-primary);
-  letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .navbar-brand .brand-name span {
@@ -867,6 +883,76 @@ select.form-control option {
   height: 1px;
   background: var(--border-gold);
   margin: 1rem auto;
+}
+
+/* ============================================================
+   NOTIFICACIONES — campana + badge + dropdown
+   ============================================================ */
+.notif-btn {
+  position: relative;
+  background: none;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  transition: all var(--transition);
+}
+.notif-btn:hover {
+  border-color: var(--border-gold);
+  color: var(--gold);
+}
+
+.notif-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--gold);
+  color: #0a0810;
+  font-size: 0.6rem;
+  font-weight: 700;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  font-family: 'Nunito', sans-serif;
+}
+
+.notif-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-lg);
+  width: 320px;
+  max-height: 420px;
+  overflow-y: auto;
+  box-shadow: var(--shadow-card);
+  z-index: 300;
+  display: none;
+}
+
+.notif-dropdown.open { display: block; }
+
+.notif-dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border-gold);
+  font-family: 'Cinzel', serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--gold);
 }
 
 /* ============================================================

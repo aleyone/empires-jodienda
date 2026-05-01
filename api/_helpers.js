@@ -139,10 +139,31 @@ async function checkRole(req, requiredRole) {
   return true;
 }
 
+/* ---- Leer notifications.json ---- */
+async function readNotifications() {
+  try {
+    const file = await ghGet('data/notifications.json');
+    const raw  = Buffer.from(file.content, 'base64').toString('utf8');
+    const data = JSON.parse(raw);
+    return { notifications: data.notifications || [], sha: file.sha };
+  } catch {
+    /* Si no existe el fichero, devolver vacío */
+    return { notifications: [], sha: null };
+  }
+}
+
+/* ---- Escribir notifications.json ---- */
+async function writeNotifications(notifications, sha, message = 'update notifications') {
+  const content = Buffer.from(JSON.stringify({ notifications }, null, 2)).toString('base64');
+  return ghPut('data/notifications.json', content, message, sha);
+}
+
+
 module.exports = {
   hashPassword,
   readUsers, writeUsers,
   readHeroes, writeHeroes,
+  readNotifications, writeNotifications,
   uploadImage, deleteFile,
   checkRole
 };

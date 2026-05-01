@@ -8,6 +8,9 @@
     { "source": "/api/users/change-password",       "destination": "/api/users" },
     { "source": "/api/users/:username",             "destination": "/api/users?username=:username" },
     { "source": "/api/heroes/:id/comment",          "destination": "/api/heroes?id=:id&action=comment" },
+    { "source": "/api/jobs/wiki-check",           "destination": "/api/jobs/wiki-check" },
+    { "source": "/api/notifications/:id",          "destination": "/api/notifications?id=:id" },
+    { "source": "/api/notifications",              "destination": "/api/notifications" },
     { "source": "/api/image-proxy",                 "destination": "/api/image-proxy" },
     { "source": "/api/hero-lookup",                 "destination": "/api/hero-lookup" },
     { "source": "/api/heroes/:id",                  "destination": "/api/heroes?id=:id" }
