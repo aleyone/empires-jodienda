@@ -295,7 +295,8 @@ const FIELD_LABELS = {
   defense:     'Defensa',
   health:      'Vida',
   specialName: 'Nombre habilidad especial',
-  specialDesc: 'Descripción habilidad'
+  specialDesc: 'Descripción habilidad',
+  imageUrl:    'Imagen'
 };
 
 const HERO_FIELD_MAP = {
@@ -309,7 +310,8 @@ const HERO_FIELD_MAP = {
   defense:     h => h.defense,
   health:      h => h.health,
   specialName: h => h.specialName,
-  specialDesc: h => h.specialDesc
+  specialDesc: h => h.specialDesc,
+  imageUrl:    h => h.imagePath  /* nuestro campo es imagePath, wiki devuelve imageUrl */
 };
 
 let wikiCompareData = null;
@@ -346,7 +348,9 @@ function getDiffs(hero, wiki) {
     const wikiVal = wiki[key];
     if (!wikiVal) return false; /* wiki no tiene dato → no es diff */
     if (!heroVal) return true;  /* nosotros no tenemos → diff */
-    return String(heroVal).trim() !== String(wikiVal).trim(); /* ambos tienen pero difieren */
+    /* Para imagen: si tenemos imagen propia, no sugerir la de la wiki */
+    if (key === 'imageUrl') return false;
+    return String(heroVal).trim() !== String(wikiVal).trim();
   });
 }
 
@@ -414,13 +418,22 @@ function showCompareTable() {
     const label   = FIELD_LABELS[key];
 
     const row = document.createElement('div');
-    row.style.cssText = `display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:0.5rem;padding:0.6rem 0.75rem;border-radius:var(--radius-sm);align-items:start;background:${isEmpty ? 'rgba(201,149,42,0.06)' : 'transparent'};border:1px solid ${isEmpty ? 'rgba(201,149,42,0.15)' : 'var(--border-subtle)'};`;
+    row.style.cssText = `display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:0.5rem;padding:0.6rem 0.75rem;border-radius:var(--radius-sm);align-items:center;background:${isEmpty ? 'rgba(201,149,42,0.06)' : 'transparent'};border:1px solid ${isEmpty ? 'rgba(201,149,42,0.15)' : 'var(--border-subtle)'};`;
+
+    /* Render especial para imagen */
+    const ourCell  = key === 'imageUrl'
+      ? (heroVal  ? `<img src="${heroVal}"  style="width:40px;height:50px;object-fit:cover;border-radius:4px;">` : '<span style="font-size:0.82rem;color:var(--text-muted);">— sin imagen —</span>')
+      : `<span style="font-size:0.82rem;color:${isEmpty ? 'var(--text-muted)' : 'var(--text-primary)'};">${isEmpty ? '— vacío —' : escapeHtml(String(heroVal))}</span>`;
+
+    const wikiCell = key === 'imageUrl'
+      ? `<img src="${wikiVal}" style="width:40px;height:50px;object-fit:cover;border-radius:4px;">`
+      : `<span style="font-size:0.82rem;color:var(--gold);">${escapeHtml(String(wikiVal))}</span>`;
 
     row.innerHTML = `
       <span style="font-size:0.82rem;font-weight:600;color:var(--text-secondary);">${label}</span>
-      <span style="font-size:0.82rem;color:${isEmpty ? 'var(--text-muted)' : 'var(--text-primary)'};">${isEmpty ? '— vacío —' : escapeHtml(String(heroVal))}</span>
-      <span style="font-size:0.82rem;color:var(--gold);">${escapeHtml(String(wikiVal))}</span>
-      <input type="checkbox" id="chk_${key}" ${isEmpty ? 'checked' : ''} style="width:16px;height:16px;accent-color:var(--gold);cursor:pointer;margin-top:2px;">`;
+      ${ourCell}
+      ${wikiCell}
+      <input type="checkbox" id="chk_${key}" ${isEmpty ? 'checked' : ''} style="width:16px;height:16px;accent-color:var(--gold);cursor:pointer;">`;
 
     table.appendChild(row);
   });
@@ -440,7 +453,12 @@ document.getElementById('wiki-apply-btn').addEventListener('click', async () => 
   Object.keys(FIELD_LABELS).forEach(key => {
     const chk = document.getElementById(`chk_${key}`);
     if (chk && chk.checked) {
-      updates[key] = wikiCompareData[key];
+      /* imageUrl de wiki se guarda como imagePath en nuestro JSON */
+      if (key === 'imageUrl') {
+        updates.imagePath = wikiCompareData[key];
+      } else {
+        updates[key] = wikiCompareData[key];
+      }
     }
   });
 
