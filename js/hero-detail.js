@@ -317,35 +317,26 @@ let currentHeroData = null;
 
 /* Lanza la comprobación wiki en segundo plano */
 async function wikiCheck(hero) {
-  console.log('[wikiCheck] starting for:', hero.name);
-  /* Permisos: admin todos, editor solo los suyos, consultor nunca */
-  if (!Auth.canEdit()) { console.log('[wikiCheck] no edit permission'); return; }
-  if (!Auth.isAdmin() && hero.createdBy !== Auth.getUsername()) { console.log('[wikiCheck] not owner'); return; }
+  if (!Auth.canEdit()) return;
+  if (!Auth.isAdmin() && hero.createdBy !== Auth.getUsername()) return;
 
-  /* ¿Ya visto en esta sesión? */
   const seenKey = `wiki_seen_${hero.id}`;
-  if (sessionStorage.getItem(seenKey)) { console.log('[wikiCheck] already seen'); return; }
+  if (sessionStorage.getItem(seenKey)) return;
 
   try {
-    console.log('[wikiCheck] fetching wiki...');
     const res = await fetch(`/api/hero-lookup?name=${encodeURIComponent(hero.name)}`);
-    console.log('[wikiCheck] response status:', res.status);
     if (!res.ok) return;
     const wikiData = await res.json();
-    console.log('[wikiCheck] wikiData:', wikiData);
-    if (wikiData.error) { console.log('[wikiCheck] wiki error:', wikiData.error); return; }
+    if (wikiData.error) return;
 
-    /* Comprobar si hay diferencias */
     const diffs = getDiffs(hero, wikiData);
-    console.log('[wikiCheck] diffs:', diffs);
-    if (diffs.length === 0) { console.log('[wikiCheck] no diffs'); return; }
+    if (diffs.length === 0) return;
 
-    /* Hay diferencias — guardar y mostrar aviso */
     wikiCompareData = wikiData;
     currentHeroData = hero;
     showWikiAviso(hero);
 
-  } catch(err) { console.log('[wikiCheck] error:', err); }
+  } catch { /* silencio */ }
 }
 
 /* Devuelve array de campos con diferencias */
@@ -368,10 +359,17 @@ function showWikiAviso(hero) {
 
   nameEl.textContent = hero.name;
 
-  if (hero.imagePath) {
-    img.src = hero.imagePath;
+  /* Prioridad: imagen de la wiki > imagen nuestra > icono */
+  const imageToShow = wikiCompareData?.imageUrl || hero.imagePath;
+
+  if (imageToShow) {
+    img.src = imageToShow;
     img.style.display = 'block';
     noImg.style.display = 'none';
+    img.onerror = () => {
+      img.style.display = 'none';
+      noImg.style.display = 'flex';
+    };
   } else {
     img.style.display = 'none';
     noImg.style.display = 'flex';

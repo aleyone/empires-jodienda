@@ -383,18 +383,32 @@ function showWikiModal(data) {
   const modal    = document.getElementById('modal-wiki');
   const nameEl   = document.getElementById('wiki-modal-name');
   const metaEl   = document.getElementById('wiki-modal-meta');
+  const iconEl   = document.getElementById('wiki-modal-icon');
 
   nameEl.textContent = data.name || '';
 
-  /* Meta: elemento + rareza */
+  /* Imagen desde wiki */
+  if (data.imageUrl) {
+    const img = document.createElement('img');
+    img.src   = data.imageUrl;
+    img.alt   = data.name || '';
+    img.style.cssText = 'width:56px;height:70px;object-fit:cover;object-position:top;border-radius:var(--radius-sm);';
+    img.onerror = () => { iconEl.textContent = '⚔'; };
+    iconEl.innerHTML = '';
+    iconEl.appendChild(img);
+  } else {
+    iconEl.textContent = '⚔';
+  }
+
+  /* Meta: elemento + rareza + clase */
   const ELEMENT_LABELS = {
     fire:'🔥 Fuego', ice:'❄️ Hielo', nature:'🌿 Naturaleza',
     dark:'💜 Oscuridad', holy:'✨ Sagrado'
   };
   const RARITY_LABELS = { '3':'⭐⭐⭐ Raro', '4':'⭐⭐⭐⭐ Épico', '5':'⭐⭐⭐⭐⭐ Legendario' };
   const parts = [];
-  if (data.element) parts.push(ELEMENT_LABELS[data.element] || data.element);
-  if (data.rarity)  parts.push(RARITY_LABELS[data.rarity]  || data.rarity);
+  if (data.element)   parts.push(ELEMENT_LABELS[data.element] || data.element);
+  if (data.rarity)    parts.push(RARITY_LABELS[data.rarity]   || data.rarity);
   if (data.heroClass) parts.push(data.heroClass);
   metaEl.textContent = parts.join(' · ');
 
