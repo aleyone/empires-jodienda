@@ -332,3 +332,85 @@ function showErr(id, msg) {
 
 /* ---- INIT ---- */
 loadAllHeroes();
+
+/* ---- BÚSQUEDA EN WIKI ---- */
+document.getElementById('btn-wiki-lookup').addEventListener('click', async () => {
+  const name   = document.getElementById('hero-name').value.trim();
+  const status = document.getElementById('wiki-lookup-status');
+  const btn    = document.getElementById('btn-wiki-lookup');
+
+  if (!name || name.length < 2) {
+    status.style.display = 'block';
+    status.style.color   = 'var(--text-muted)';
+    status.textContent   = 'Escribe el nombre del héroe primero';
+    return;
+  }
+
+  btn.disabled    = true;
+  btn.textContent = '⏳ Buscando...';
+  status.style.display = 'block';
+  status.style.color   = 'var(--gold)';
+  status.textContent   = `Buscando "${name}" en la wiki...`;
+
+  try {
+    const res  = await fetch(`/api/hero-lookup?name=${encodeURIComponent(name)}`);
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      status.style.color = 'var(--text-muted)';
+      status.textContent = data.error || 'No encontrado. Rellena los datos manualmente.';
+      return;
+    }
+
+    /* Rellenar campos con los datos de la wiki */
+    let filled = 0;
+
+    if (data.element) {
+      document.getElementById('hero-element').value = data.element;
+      filled++;
+    }
+    if (data.rarity) {
+      document.getElementById('hero-rarity').value = data.rarity;
+      filled++;
+    }
+    if (data.heroClass) {
+      document.getElementById('hero-class').value = data.heroClass;
+      filled++;
+    }
+    if (data.manaSpeed) {
+      document.getElementById('hero-mana').value = data.manaSpeed;
+      filled++;
+    }
+    if (data.family) {
+      document.getElementById('hero-family').value = data.family;
+      filled++;
+    }
+    if (data.power)   { document.getElementById('hero-power').value = data.power;   filled++; }
+    if (data.attack)  { document.getElementById('hero-atk').value   = data.attack;  filled++; }
+    if (data.defense) { document.getElementById('hero-def').value   = data.defense; filled++; }
+    if (data.health)  { document.getElementById('hero-hp').value    = data.health;  filled++; }
+    if (data.specialName) {
+      document.getElementById('hero-special-name').value = data.specialName;
+      filled++;
+    }
+    if (data.specialDesc) {
+      document.getElementById('hero-special-desc').value = data.specialDesc;
+      filled++;
+    }
+
+    if (filled > 0) {
+      status.style.color = '#70d470';
+      status.textContent = `✓ ${filled} campo${filled > 1 ? 's' : ''} rellenado${filled > 1 ? 's' : ''} desde la wiki. Revisa y completa lo que falte.`;
+    } else {
+      status.style.color = 'var(--text-muted)';
+      status.textContent = 'Encontrado en la wiki pero sin datos extraíbles. Rellena manualmente.';
+    }
+
+  } catch {
+    status.style.color = 'var(--text-muted)';
+    status.textContent = 'Error de conexión con la wiki. Rellena los datos manualmente.';
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = '🔍 Wiki';
+  }
+});
