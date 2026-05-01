@@ -176,8 +176,11 @@
 <script src="js/heroes.js"></script>
 <script src="js/index.js"></script>
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    Changelog.check();
+  /* Esperar a que todo cargue y la sesión esté disponible */
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      Changelog.check();
+    }, 500);
     document.getElementById('changelog-dismiss')?.addEventListener('click', () => Changelog.dismiss());
   });
 </script>
