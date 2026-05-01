@@ -17,8 +17,13 @@ module.exports = async (req, res) => {
   if (!username) return res.status(401).json({ error: 'No autenticado' });
 
   try {
-    await checkRole(username, ['admin','editor']);
-  } catch {
+    const { readUsers } = require('./_helpers');
+    const { users } = await readUsers();
+    const user = users.find(u => u.username === username);
+    if (!user || !['admin','editor'].includes(user.role)) {
+      return res.status(403).json({ error: 'Sin permisos' });
+    }
+  } catch (err) {
     return res.status(403).json({ error: 'Sin permisos' });
   }
 
