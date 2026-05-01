@@ -1,0 +1,28 @@
+{
+  "notifications": [
+    {
+      "id": "b2139bae4663",
+      "type": "wiki_update_summary",
+      "targetUser": "admins",
+      "heroes": [
+        {
+          "id": "a723d90b4939",
+          "name": "Khufu",
+          "createdBy": "adrian",
+          "wikiCheckedAt": "2026-05-01T22:22:32.867Z",
+          "diffCount": 8
+        },
+        {
+          "id": "93336fbbebe4",
+          "name": "cobalt",
+          "createdBy": "david",
+          "wikiCheckedAt": "2026-05-01T22:22:33.762Z",
+          "diffCount": 2
+        }
+      ],
+      "totalCount": 2,
+      "read": false,
+      "createdAt": "2026-05-01T22:22:34.443Z"
+    }
+  ]
+}
