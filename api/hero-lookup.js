@@ -32,13 +32,42 @@ module.exports = async (req, res) => {
     /* Solo usar el primer bloque {{Hero}} — ignorar costumes */
     const firstHeroBlock = extractFirstHeroBlock(fullWikitext);
 
-    return res.status(200).json(parseHeroWikitext(firstHeroBlock, heroName));
+    const parsed = parseHeroWikitext(firstHeroBlock, heroName);
+
+    /* Resolver URL de imagen si tenemos nombre de fichero */
+    if (parsed.imageFile) {
+      try {
+        parsed.imageUrl = await resolveImageUrl(parsed.imageFile);
+      } catch { /* sin imagen — no pasa nada */ }
+      delete parsed.imageFile; /* no necesitamos el nombre de fichero en el cliente */
+    }
+
+    return res.status(200).json(parsed);
 
   } catch (err) {
     console.error('[hero-lookup]', err.message);
     return res.status(503).json({ error: 'Error al conectar con la wiki. Rellena manualmente.' });
   }
 };
+
+/* ---- Resolver URL de imagen via MediaWiki API ---- */
+async function resolveImageUrl(filename) {
+  const url = `https://empiresandpuzzles.fandom.com/api.php?` +
+    `action=query&titles=File:${encodeURIComponent(filename)}&prop=imageinfo&iiprop=url&format=json`;
+
+  const res = await fetch(url, {
+    headers: { 'User-Agent': 'Mini-Kripta-EpFanTool/1.0' },
+    signal: AbortSignal.timeout(5000)
+  });
+
+  if (!res.ok) return null;
+  const data  = await res.json();
+  const pages = data?.query?.pages;
+  if (!pages) return null;
+
+  const page = Object.values(pages)[0];
+  return page?.imageinfo?.[0]?.url || null;
+}
 
 /* ---- Extrae solo el primer bloque {{Hero}} ---- */
 function extractFirstHeroBlock(wikitext) {
@@ -227,6 +256,15 @@ function parseHeroWikitext(wikitext, heroName) {
   }
   if (effects.length > 0) {
     result.specialDesc = effects.join('\n');
+  }
+
+  /* ---- IMAGEN ---- */
+  const imageFile = field('image');
+  if (imageFile) {
+    const cleaned = clean(imageFile);
+    if (cleaned && cleaned.length < 100 && !cleaned.includes('{')) {
+      result.imageFile = cleaned;
+    }
   }
 
   return result;
