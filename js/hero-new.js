@@ -401,6 +401,20 @@ document.getElementById('btn-wiki-lookup').addEventListener('click', async () =>
     if (filled > 0) {
       status.style.color = '#70d470';
       status.textContent = `✓ ${filled} campo${filled > 1 ? 's' : ''} rellenado${filled > 1 ? 's' : ''} desde la wiki. Revisa y completa lo que falte.`;
+
+      /* Disparar change en selects para que se actualicen visualmente */
+      ['hero-element','hero-rarity','hero-class','hero-mana'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.dispatchEvent(new Event('change'));
+      });
+
+      /* Limpiar errores de validación */
+      document.querySelectorAll('.form-error').forEach(e => {
+        e.textContent = ''; e.classList.remove('visible');
+      });
+      document.querySelectorAll('.form-control.error').forEach(e => {
+        e.classList.remove('error');
+      });
     } else {
       status.style.color = 'var(--text-muted)';
       status.textContent = 'Encontrado en la wiki pero sin datos extraíbles. Rellena manualmente.';
