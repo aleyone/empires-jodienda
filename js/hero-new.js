@@ -54,9 +54,29 @@ function findDuplicate(name) {
 }
 
 /* ---- VALIDACIÓN AL SALIR DEL CAMPO (blur) ---- */
-document.getElementById('hero-name').addEventListener('blur', (e) => {
+document.getElementById('hero-name').addEventListener('blur', async (e) => {
   duplicateWarned = false;
-  checkNameDuplicate(e.target.value);
+  const name = e.target.value.trim();
+  if (!name || name.length < 2) return;
+
+  /* 1. Comprobar duplicado */
+  const match = findDuplicate(name);
+  if (match && match.type === 'exact') {
+    const nameInput = document.getElementById('hero-name');
+    const errEl     = document.getElementById('err-name');
+    nameInput.classList.add('error');
+    errEl.textContent = `Ya existe un héroe llamado "${match.hero.name}". Cambia el nombre.`;
+    errEl.classList.add('visible');
+    return;
+  }
+  if (match && match.type === 'partial') {
+    showDuplicateModal(match.hero);
+    /* wiki lookup se lanzará desde dup-continue si el usuario acepta */
+    return;
+  }
+
+  /* 2. Sin duplicado → buscar en wiki */
+  await wikiLookup(name);
 });
 
 /* Limpiar aviso mientras escribe */
@@ -126,13 +146,16 @@ function showDuplicateModal(hero) {
 }
 
 /* Botón "Es otro héroe, continuar" */
-document.getElementById('dup-continue').addEventListener('click', () => {
+document.getElementById('dup-continue').addEventListener('click', async () => {
   document.getElementById('modal-duplicate').style.display = 'none';
   duplicateWarned = true;
   /* Quitar aviso del campo */
   document.getElementById('hero-name').classList.remove('error');
   document.getElementById('err-name').textContent = '';
   document.getElementById('err-name').classList.remove('visible');
+  /* Buscar en wiki ahora que confirmamos que es otro héroe */
+  const name = document.getElementById('hero-name').value.trim();
+  if (name) await wikiLookup(name);
 });
 
 /* Botón "Cancelar, es el mismo" */
@@ -333,98 +356,83 @@ function showErr(id, msg) {
 /* ---- INIT ---- */
 loadAllHeroes();
 
-/* ---- BÚSQUEDA EN WIKI ---- */
-document.getElementById('btn-wiki-lookup').addEventListener('click', async () => {
-  const name   = document.getElementById('hero-name').value.trim();
-  const status = document.getElementById('wiki-lookup-status');
-  const btn    = document.getElementById('btn-wiki-lookup');
 
-  if (!name || name.length < 2) {
-    status.style.display = 'block';
-    status.style.color   = 'var(--text-muted)';
-    status.textContent   = 'Escribe el nombre del héroe primero';
-    return;
-  }
+/* ============================================================
+   WIKI LOOKUP — busca el héroe al salir del campo nombre
+   ============================================================ */
 
-  btn.disabled    = true;
-  btn.textContent = '⏳ Buscando...';
-  status.style.display = 'block';
-  status.style.color   = 'var(--gold)';
-  status.textContent   = `Buscando "${name}" en la wiki...`;
+let wikiData = null; /* datos de la wiki para importar */
+
+async function wikiLookup(name) {
+  if (!name || name.length < 2) return;
 
   try {
     const res  = await fetch(`/api/hero-lookup?name=${encodeURIComponent(name)}`);
+    if (!res.ok) return; /* no encontrado o error — silencio */
     const data = await res.json();
+    if (data.error) return;
 
-    if (!res.ok || data.error) {
-      status.style.color = 'var(--text-muted)';
-      status.textContent = data.error || 'No encontrado. Rellena los datos manualmente.';
-      return;
-    }
+    /* Tenemos datos — guardar y mostrar modal */
+    wikiData = data;
+    showWikiModal(data);
 
-    /* Rellenar campos con los datos de la wiki */
-    let filled = 0;
+  } catch { /* error de red — silencio */ }
+}
 
-    if (data.element) {
-      document.getElementById('hero-element').value = data.element;
-      filled++;
-    }
-    if (data.rarity) {
-      document.getElementById('hero-rarity').value = data.rarity;
-      filled++;
-    }
-    if (data.heroClass) {
-      document.getElementById('hero-class').value = data.heroClass;
-      filled++;
-    }
-    if (data.manaSpeed) {
-      document.getElementById('hero-mana').value = data.manaSpeed;
-      filled++;
-    }
-    if (data.family) {
-      document.getElementById('hero-family').value = data.family;
-      filled++;
-    }
-    if (data.power)   { document.getElementById('hero-power').value = data.power;   filled++; }
-    if (data.attack)  { document.getElementById('hero-atk').value   = data.attack;  filled++; }
-    if (data.defense) { document.getElementById('hero-def').value   = data.defense; filled++; }
-    if (data.health)  { document.getElementById('hero-hp').value    = data.health;  filled++; }
-    if (data.specialName) {
-      document.getElementById('hero-special-name').value = data.specialName;
-      filled++;
-    }
-    if (data.specialDesc) {
-      document.getElementById('hero-special-desc').value = data.specialDesc;
-      filled++;
-    }
+function showWikiModal(data) {
+  const modal    = document.getElementById('modal-wiki');
+  const nameEl   = document.getElementById('wiki-modal-name');
+  const metaEl   = document.getElementById('wiki-modal-meta');
 
-    if (filled > 0) {
-      status.style.color = '#70d470';
-      status.textContent = `✓ ${filled} campo${filled > 1 ? 's' : ''} rellenado${filled > 1 ? 's' : ''} desde la wiki. Revisa y completa lo que falte.`;
+  nameEl.textContent = data.name || '';
 
-      /* Disparar change en selects para que se actualicen visualmente */
-      ['hero-element','hero-rarity','hero-class','hero-mana'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.dispatchEvent(new Event('change'));
-      });
+  /* Meta: elemento + rareza */
+  const ELEMENT_LABELS = {
+    fire:'🔥 Fuego', ice:'❄️ Hielo', nature:'🌿 Naturaleza',
+    dark:'💜 Oscuridad', holy:'✨ Sagrado'
+  };
+  const RARITY_LABELS = { '3':'⭐⭐⭐ Raro', '4':'⭐⭐⭐⭐ Épico', '5':'⭐⭐⭐⭐⭐ Legendario' };
+  const parts = [];
+  if (data.element) parts.push(ELEMENT_LABELS[data.element] || data.element);
+  if (data.rarity)  parts.push(RARITY_LABELS[data.rarity]  || data.rarity);
+  if (data.heroClass) parts.push(data.heroClass);
+  metaEl.textContent = parts.join(' · ');
 
-      /* Limpiar errores de validación */
-      document.querySelectorAll('.form-error').forEach(e => {
-        e.textContent = ''; e.classList.remove('visible');
-      });
-      document.querySelectorAll('.form-control.error').forEach(e => {
-        e.classList.remove('error');
-      });
-    } else {
-      status.style.color = 'var(--text-muted)';
-      status.textContent = 'Encontrado en la wiki pero sin datos extraíbles. Rellena manualmente.';
-    }
+  modal.style.display = 'block';
+}
 
-  } catch {
-    status.style.color = 'var(--text-muted)';
-    status.textContent = 'Error de conexión con la wiki. Rellena los datos manualmente.';
-  } finally {
-    btn.disabled    = false;
-    btn.textContent = '🔍 Wiki';
-  }
+/* ---- Importar datos al formulario ---- */
+document.getElementById('wiki-import-btn').addEventListener('click', () => {
+  if (!wikiData) return;
+  fillFormFromWiki(wikiData);
+  document.getElementById('modal-wiki').style.display = 'none';
+  wikiData = null;
 });
+
+/* ---- Cancelar ---- */
+document.getElementById('wiki-cancel-btn').addEventListener('click', () => {
+  document.getElementById('modal-wiki').style.display = 'none';
+  wikiData = null;
+});
+
+function fillFormFromWiki(data) {
+  if (data.element)     document.getElementById('hero-element').value      = data.element;
+  if (data.rarity)      document.getElementById('hero-rarity').value       = data.rarity;
+  if (data.heroClass)   document.getElementById('hero-class').value        = data.heroClass;
+  if (data.manaSpeed)   document.getElementById('hero-mana').value         = data.manaSpeed;
+  if (data.family)      document.getElementById('hero-family').value       = data.family;
+  if (data.power)       document.getElementById('hero-power').value        = data.power;
+  if (data.attack)      document.getElementById('hero-atk').value          = data.attack;
+  if (data.defense)     document.getElementById('hero-def').value          = data.defense;
+  if (data.health)      document.getElementById('hero-hp').value           = data.health;
+  if (data.specialName) document.getElementById('hero-special-name').value = data.specialName;
+  if (data.specialDesc) document.getElementById('hero-special-desc').value = data.specialDesc;
+
+  /* Limpiar errores de validación */
+  document.querySelectorAll('.form-error').forEach(e => {
+    e.textContent = ''; e.classList.remove('visible');
+  });
+  document.querySelectorAll('.form-control.error').forEach(e => e.classList.remove('error'));
+
+  showToast('Datos importados desde la wiki ✓', 'success');
+}
