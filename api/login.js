@@ -35,9 +35,10 @@ module.exports = async (req, res) => {
     }
 
     const safeUser = {
-      username: user.username,
-      role:     user.role,
-      email:    user.email || ''
+      username:        user.username,
+      role:            user.role,
+      email:           user.email || '',
+      lastSeenVersion: user.lastSeenVersion || null
     };
 
     if (user.firstLogin) {
