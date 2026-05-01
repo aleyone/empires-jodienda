@@ -323,8 +323,9 @@ document.getElementById('hero-form').addEventListener('submit', async (e) => {
     specialDesc: document.getElementById('hero-special-desc').value.trim(),
     notes:       document.getElementById('hero-notes').value.trim(),
     howToBeat:   document.getElementById('hero-howtobeat').value.trim(),
-    ratingHard:  parseInt(document.getElementById('rate-hard').dataset.value) || 0,
-    ratingCool:  parseInt(document.getElementById('rate-cool').dataset.value) || 0,
+    ratingHard:        parseInt(document.getElementById('rate-hard').dataset.value) || 0,
+    ratingCool:        parseInt(document.getElementById('rate-cool').dataset.value) || 0,
+    additionalImages:  additionalImages.length > 0 ? additionalImages : [],
   };
 
   const btn = document.getElementById('submit-btn');
@@ -494,4 +495,68 @@ async function importWikiImage(imageUrl) {
     progress.classList.add('hidden');
     console.warn('[importWikiImage]', err.message);
   }
+}
+
+/* ============================================================
+   IMÁGENES ADICIONALES
+   ============================================================ */
+
+let additionalImages = []; /* array de URLs Cloudinary */
+
+document.getElementById('additional-image-input').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  e.target.value = ''; /* reset para permitir subir el mismo fichero */
+
+  const status = document.getElementById('additional-upload-status');
+  status.style.display = 'block';
+  status.style.color   = 'var(--gold)';
+  status.textContent   = '⏳ Comprimiendo y subiendo...';
+
+  try {
+    /* Comprimir igual que la imagen principal */
+    const result = await compressImage(file, 400);
+    const blob   = result.blob;
+    const ext    = result.isPng ? 'png' : 'jpg';
+
+    /* Crear FormData para subir */
+    const fd = new FormData();
+    fd.append('image', blob, `additional-${Date.now()}.${ext}`);
+    fd.append('data',  JSON.stringify({ _additionalUpload: true }));
+
+    const res = await fetch('/api/upload', {
+      method:  'POST',
+      headers: { 'x-username': Auth.getUsername() },
+      body:    fd
+    });
+
+    if (!res.ok) throw new Error('Error al subir');
+    const data = await res.json();
+
+    additionalImages.push(data.url);
+    renderAdditionalImages();
+
+    status.style.color  = '#70d470';
+    status.textContent  = `✓ Imagen añadida (${additionalImages.length} en total)`;
+
+  } catch (err) {
+    status.style.color  = 'var(--danger)';
+    status.textContent  = 'Error al subir la imagen. Inténtalo de nuevo.';
+    console.error(err);
+  }
+});
+
+function renderAdditionalImages() {
+  const list = document.getElementById('additional-images-list');
+  list.innerHTML = additionalImages.map((url, idx) => `
+    <div style="position:relative;width:72px;height:72px;">
+      <img src="${url}" style="width:72px;height:72px;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--border-subtle);">
+      <button type="button" onclick="removeAdditionalImage(${idx})"
+        style="position:absolute;top:-6px;right:-6px;background:var(--danger);color:white;border:none;border-radius:50%;width:18px;height:18px;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">✕</button>
+    </div>`).join('');
+}
+
+function removeAdditionalImage(idx) {
+  additionalImages.splice(idx, 1);
+  renderAdditionalImages();
 }

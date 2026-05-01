@@ -143,6 +143,9 @@ function renderHero(h) {
 
   /* Wiki check en segundo plano — Fase 2 */
   wikiCheck(h);
+
+  /* Galería de imágenes adicionales */
+  renderAdditionalGallery(h);
 }
 
 function setMeta(id, content) {
@@ -511,3 +514,43 @@ document.getElementById('wiki-compare-cancel').addEventListener('click', () => {
   document.getElementById('modal-wiki-compare').style.display = 'none';
   if (currentHeroData) sessionStorage.setItem(`wiki_seen_${currentHeroData.id}`, '1');
 });
+
+/* ============================================================
+   GALERÍA DE IMÁGENES ADICIONALES
+   ============================================================ */
+
+function renderAdditionalGallery(hero) {
+  if (!hero.additionalImages || hero.additionalImages.length === 0) return;
+
+  /* Buscar o crear sección */
+  let section = document.getElementById('additional-gallery-section');
+  if (!section) {
+    section = document.createElement('section');
+    section.id = 'additional-gallery-section';
+    section.style.cssText = 'margin-top:2rem;';
+    document.querySelector('main .container')?.appendChild(section);
+  }
+
+  section.innerHTML = `
+    <div style="border-top:1px solid var(--border-gold);padding-top:1.5rem;">
+      <h2 style="font-family:'Cinzel',serif;font-size:1rem;font-weight:600;color:var(--gold);margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;">
+        <span>🖼</span> Galería
+      </h2>
+      <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
+        ${hero.additionalImages.map(url => `
+          <img src="${url}" alt=""
+            onclick="openLightbox('${url}')"
+            style="width:90px;height:90px;object-fit:cover;border-radius:var(--radius-sm);cursor:pointer;border:1px solid var(--border-subtle);transition:all var(--transition);"
+            onmouseover="this.style.borderColor='var(--border-gold)'"
+            onmouseout="this.style.borderColor='var(--border-subtle)'">
+        `).join('')}
+      </div>
+    </div>`;
+}
+
+function openLightbox(url) {
+  const lb  = document.getElementById('lightbox');
+  const img = document.getElementById('lightbox-img');
+  img.src   = url;
+  lb.style.display = 'flex';
+}
