@@ -116,6 +116,28 @@
       "imagePath": "https://raw.githubusercontent.com/aleyone/empires-jodienda/main/img/heroes/1777647812269-6e102a0d.jpg",
       "createdBy": "david",
       "createdAt": "2026-05-01T15:03:35.046Z"
+    },
+    {
+      "id": "0fbad6b6b7c3",
+      "name": "hawkmoon",
+      "element": "fire",
+      "rarity": "3",
+      "family": "Classic",
+      "heroClass": "Clérigo",
+      "manaSpeed": "Promedio",
+      "power": "444",
+      "attack": "474",
+      "defense": "446",
+      "health": "637",
+      "specialName": "Wind Prayer",
+      "specialDesc": "Recover 32% health for all allies.",
+      "notes": "",
+      "howToBeat": "",
+      "ratingHard": 0,
+      "ratingCool": 0,
+      "imagePath": "https://raw.githubusercontent.com/aleyone/empires-jodienda/main/img/heroes/1777648520731-bb36eb62.jpg",
+      "createdBy": "david",
+      "createdAt": "2026-05-01T15:15:23.924Z"
     }
   ]
 }
