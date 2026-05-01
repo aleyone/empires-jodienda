@@ -26,9 +26,10 @@ const Auth = (() => {
 
   function setSession(user) {
     const data = JSON.stringify({
-      username: user.username,
-      role:     user.role,
-      email:    user.email || ''
+      username:        user.username,
+      role:            user.role,
+      email:           user.email || '',
+      lastSeenVersion: user.lastSeenVersion || null
     });
     sessionStorage.setItem(SESSION_KEY, data);
     localStorage.setItem(SESSION_KEY, data);
