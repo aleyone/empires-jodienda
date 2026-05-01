@@ -1,0 +1,88 @@
+{
+  "currentVersion": "1.6",
+  "versions": [
+    {
+      "version": "1.6",
+      "date": "2026-05-01",
+      "title": "Sistema de notificaciones",
+      "changes": [
+        "Campana de notificaciones en la barra de navegación",
+        "Job semanal automático que compara los héroes con la wiki de E&P",
+        "Notificaciones personalizadas por rol: editores reciben avisos de sus héroes, admins reciben un resumen global",
+        "Página de gestión de notificaciones con estado por héroe",
+        "Detección automática de héroes ya actualizados en las notificaciones"
+      ]
+    },
+    {
+      "version": "1.5",
+      "date": "2026-05-01",
+      "title": "Mejoras de acceso y experiencia",
+      "changes": [
+        "Login con usuario o email indistintamente",
+        "Sesión persistente mientras el navegador esté abierto",
+        "App instalable en móvil (PWA) con icono en pantalla de inicio",
+        "Filtros por elemento y familia, ordenación múltiple en el bestiario",
+        "Contador de infames en la cabecera"
+      ]
+    },
+    {
+      "version": "1.4",
+      "date": "2026-05-01",
+      "title": "Actualización desde la wiki",
+      "changes": [
+        "Comparación automática de datos al abrir una ficha de héroe",
+        "Aviso cuando hay datos actualizados disponibles en la wiki",
+        "Tabla comparativa campo a campo con checkboxes para elegir qué actualizar",
+        "Importación selectiva de campos desde la wiki"
+      ]
+    },
+    {
+      "version": "1.3",
+      "date": "2026-04-30",
+      "title": "Detección de duplicados y permisos",
+      "changes": [
+        "Detección de duplicados en tiempo real al escribir el nombre del héroe",
+        "Modal de aviso con imagen del héroe existente para comparar antes de crear",
+        "Editores solo pueden modificar y eliminar sus propios héroes",
+        "Admins tienen control total sobre todos los héroes"
+      ]
+    },
+    {
+      "version": "1.2",
+      "date": "2026-04-30",
+      "title": "Integración con la wiki de E&P",
+      "changes": [
+        "Búsqueda automática en la wiki al escribir el nombre del héroe",
+        "Modal de confirmación con imagen del héroe antes de importar",
+        "Importación automática de datos y imagen desde la wiki con un clic",
+        "Compresión automática de imágenes a 400KB"
+      ]
+    },
+    {
+      "version": "1.1",
+      "date": "2026-04-30",
+      "title": "Ficha completa del héroe",
+      "changes": [
+        "Stats completos: clase, familia, velocidad de maná, poder, ataque, defensa y vida",
+        "Habilidad especial con nombre y descripción",
+        "Valoraciones 'Qué jodido es' y 'Qué mola'",
+        "Campo 'Cómo vencerle' y notas del grupo",
+        "Comentarios por héroe",
+        "Compartir héroe por WhatsApp con preview"
+      ]
+    },
+    {
+      "version": "1.0",
+      "date": "2026-04-30",
+      "title": "Lanzamiento",
+      "changes": [
+        "Login con usuario y contraseña, cambio obligatorio en primer acceso",
+        "Recuperación de contraseña por email",
+        "Roles: Admin, Editor y Consultor",
+        "Panel de gestión de usuarios para admins",
+        "Listado de héroes con imagen, elemento y rareza",
+        "Subida de imagen desde móvil"
+      ]
+    }
+  ]
+}
