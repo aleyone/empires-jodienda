@@ -104,7 +104,7 @@
       "name": "cobalt",
       "element": "ice",
       "rarity": "5",
-      "family": "Ninja",
+      "family": "",
       "heroClass": "Mago (Wizard)",
       "manaSpeed": "Carga",
       "power": "798",
@@ -112,14 +112,16 @@
       "defense": "685",
       "health": "1435",
       "specialName": "Katana Rain",
-      "specialDesc": "Special Skill has a different effect when charged with 100%/200%/300% mana:\nx1 Mana Charge:\nx2 Mana Charge:\nx3 Mana Charge:",
+      "specialDesc": "x3 Mana Charge:",
       "notes": "",
       "howToBeat": "",
       "ratingHard": 0,
       "ratingCool": 0,
       "imagePath": "https://raw.githubusercontent.com/aleyone/empires-jodienda/main/img/heroes/1777647812269-6e102a0d.jpg",
       "createdBy": "david",
-      "createdAt": "2026-05-01T15:03:35.046Z"
+      "createdAt": "2026-05-01T15:03:35.046Z",
+      "updatedAt": "2026-05-01T22:18:51.790Z",
+      "updatedBy": "david"
     },
     {
       "id": "0fbad6b6b7c3",
