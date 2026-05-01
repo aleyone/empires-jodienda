@@ -23,9 +23,13 @@ module.exports = async (req, res) => {
         const { notifications } = await readNotifications();
 
         /* Filtrar por usuario destino */
-        const userNotifs = notifications.filter(n =>
-          n.targetUser === target || n.targetUser === 'admins' && isAdminUser(callerUsername, await getUsers())
-        );
+        const users = await getUsers();
+        const isAdmin = isAdminUser(callerUsername, users);
+        const userNotifs = notifications.filter(n => {
+          if (n.targetUser === callerUsername) return true;
+          if (n.targetUser === 'admins' && isAdmin) return true;
+          return false;
+        });
 
         /* Ordenar por fecha desc */
         userNotifs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
