@@ -1,132 +1,204 @@
-/* ============================================================
-   heroes.js — Capa de acceso a datos de héroes
-   ============================================================ */
+/* api/heroes.js — CRUD de héroes
+   Vercel: bodyParser desactivado para recibir multipart correctamente
+*/
 
-const HeroesAPI = (() => {
+const { readHeroes, writeHeroes, uploadImage, deleteFile, checkRole } = require('./_helpers');
+const formidable = require('formidable');
+const fs         = require('fs');
+const crypto     = require('crypto');
 
-  /* Devuelve todos los héroes */
-  async function getAll() {
-    const res = await fetch('/api/heroes');
-    if (!res.ok) throw new Error('Error al cargar héroes');
-    const data = await res.json();
-    return data.heroes || [];
+/* Desactivar bodyParser de Vercel — obligatorio para multipart/form-data */
+module.exports = handler;
+module.exports.config = { api: { bodyParser: false } };
+
+async function handler(req, res) {
+  res.setHeader('Content-Type', 'application/json');
+  const { id } = req.query;
+
+  /* Comentarios — acción especial */
+  if (req.query.action === 'comment') {
+    return handleComment(req, res, id);
   }
 
-  /* Devuelve un héroe por ID */
-  async function getById(id) {
-    const res = await fetch(`/api/heroes/${id}`);
-    if (!res.ok) throw new Error('Héroe no encontrado');
-    return res.json();
+  try {
+    switch (req.method) {
+
+      case 'GET': {
+        const { heroes } = await readHeroes();
+        if (id) {
+          const hero = heroes.find(h => h.id === id);
+          if (!hero) return res.status(404).json({ error: 'Héroe no encontrado' });
+          return res.status(200).json(hero);
+        }
+        return res.status(200).json({ heroes });
+      }
+
+      case 'POST': {
+        if (!(await checkRole(req, 'editor'))) {
+          return res.status(403).json({ error: 'Sin permisos' });
+        }
+        const { heroData, imageBuffer, imageExt } = await parseMultipart(req);
+
+        let imagePath = null;
+        if (imageBuffer && imageBuffer.length > 0) {
+          const filename = `${Date.now()}-${crypto.randomBytes(4).toString('hex')}.${imageExt}`;
+          imagePath = await uploadImage(filename, imageBuffer);
+          await delay(2000);
+        }
+
+        const { heroes, sha } = await readHeroes();
+        const newHero = {
+          id:        crypto.randomBytes(6).toString('hex'),
+          ...heroData,
+          imagePath,
+          createdBy: req.headers['x-username'] || 'unknown',
+          createdAt: new Date().toISOString()
+        };
+        heroes.push(newHero);
+        await writeHeroes(heroes, sha, `add hero: ${newHero.name}`);
+        return res.status(201).json(newHero);
+      }
+
+      case 'PUT': {
+        if (!id) return res.status(400).json({ error: 'id requerido' });
+        if (!(await checkRole(req, 'editor'))) {
+          return res.status(403).json({ error: 'Sin permisos' });
+        }
+        const { heroData, imageBuffer, imageExt } = await parseMultipart(req);
+        const { heroes, sha } = await readHeroes();
+        const idx = heroes.findIndex(h => h.id === id);
+        if (idx === -1) return res.status(404).json({ error: 'Héroe no encontrado' });
+        /* Editors can only edit their own heroes */
+        const callerPut = req.headers['x-username'];
+        const isAdminPut = await checkRole(req, 'admin');
+        if (!isAdminPut && heroes[idx].createdBy !== callerPut) {
+          return res.status(403).json({ error: 'Solo puedes editar tus propios héroes' });
+        }
+
+        let imagePath = heroes[idx].imagePath;
+        if (imageBuffer && imageBuffer.length > 0) {
+          /* Nueva imagen subida — sube a GitHub */
+          const filename = `${Date.now()}-${crypto.randomBytes(4).toString('hex')}.${imageExt}`;
+          imagePath = await uploadImage(filename, imageBuffer);
+          await delay(2000);
+        } else if (heroData.imagePath && heroData.imagePath !== heroes[idx].imagePath) {
+          /* URL de imagen externa (ej: wiki) — guardar directamente */
+          imagePath = heroData.imagePath;
+        }
+
+        heroes[idx] = {
+          ...heroes[idx],
+          ...heroData,
+          imagePath,
+          updatedAt: new Date().toISOString(),
+          updatedBy: req.headers['x-username'] || 'unknown'
+        };
+        await writeHeroes(heroes, sha, `update hero: ${heroes[idx].name}`);
+        return res.status(200).json(heroes[idx]);
+      }
+
+      case 'DELETE': {
+        if (!id) return res.status(400).json({ error: 'id requerido' });
+        if (!(await checkRole(req, 'editor'))) {
+          return res.status(403).json({ error: 'Sin permisos' });
+        }
+        const { heroes, sha } = await readHeroes();
+        const idx = heroes.findIndex(h => h.id === id);
+        if (idx === -1) return res.status(404).json({ error: 'Héroe no encontrado' });
+        /* Editors can only delete their own heroes */
+        const callerDel = req.headers['x-username'];
+        const isAdminDel = await checkRole(req, 'admin');
+        if (!isAdminDel && heroes[idx].createdBy !== callerDel) {
+          return res.status(403).json({ error: 'Solo puedes eliminar tus propios héroes' });
+        }
+
+        const hero = heroes[idx];
+        if (hero.imagePath) {
+          await deleteFile(
+            hero.imagePath.replace(/^.*githubusercontent\.com\/[^/]+\/[^/]+\/[^/]+\//, ''),
+            `delete image: ${hero.name}`
+          ).catch(() => {});
+        }
+        heroes.splice(idx, 1);
+        await writeHeroes(heroes, sha, `delete hero: ${hero.name}`);
+        return res.status(200).json({ ok: true });
+      }
+
+      default:
+        return res.status(405).json({ error: 'Method not allowed' });
+    }
+  } catch (err) {
+    console.error('[heroes.js]', err.message, err.stack);
+    return res.status(500).json({ error: err.message || 'Error interno' });
   }
+}
 
-  /* Crea un héroe nuevo (multipart: imagen + JSON) */
-  async function create(heroData, imageBlob) {
-    const session = Auth.getSession();
-    const formData = new FormData();
-    formData.append('data', JSON.stringify(heroData));
-    if (imageBlob) formData.append('image', imageBlob, 'hero.' + (imageBlob._ext || 'jpg'));
-
-    const res = await fetch('/api/heroes', {
-      method: 'POST',
-      headers: { 'x-username': session.username },
-      body: formData
+/* ---- Parsear multipart ---- */
+function parseMultipart(req) {
+  return new Promise((resolve, reject) => {
+    const form = new formidable.Formidable({
+      maxFileSize:    500 * 1024,
+      keepExtensions: true
     });
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || 'Error al crear héroe');
-    }
-    return res.json();
-  }
+    form.parse(req, (err, fields, files) => {
+      if (err) return reject(err);
 
-  /* Actualiza un héroe */
-  async function update(id, heroData, imageBlob) {
-    const session = Auth.getSession();
-    const formData = new FormData();
-    formData.append('data', JSON.stringify(heroData));
-    if (imageBlob) formData.append('image', imageBlob, 'hero.' + (imageBlob._ext || 'jpg'));
+      let heroData = {};
+      try {
+        const raw = Array.isArray(fields.data) ? fields.data[0] : fields.data;
+        heroData = JSON.parse(raw || '{}');
+      } catch (e) {
+        console.error('Error parsing heroData JSON:', e);
+      }
 
-    const res = await fetch(`/api/heroes/${id}`, {
-      method: 'PUT',
-      headers: { 'x-username': session.username },
-      body: formData
+      let imageBuffer = null;
+      let imageExt    = 'jpg';
+      const imgFile   = files.image
+        ? (Array.isArray(files.image) ? files.image[0] : files.image)
+        : null;
+
+      if (imgFile && imgFile.size > 0) {
+        try {
+          imageBuffer = fs.readFileSync(imgFile.filepath || imgFile.path);
+          const originalName = imgFile.originalFilename || imgFile.name || 'hero.jpg';
+          imageExt = originalName.split('.').pop().toLowerCase() || 'jpg';
+          if (!['jpg', 'jpeg', 'png', 'webp'].includes(imageExt)) imageExt = 'jpg';
+          console.log(`[heroes] image received: ${originalName}, size: ${imageBuffer.length}, ext: ${imageExt}`);
+        } catch (e) {
+          console.error('Error reading image file:', e);
+        }
+      }
+
+      resolve({ heroData, imageBuffer, imageExt });
     });
+  });
+}
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || 'Error al actualizar héroe');
-    }
-    return res.json();
-  }
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-  /* Elimina un héroe */
-  async function remove(id) {
-    const session = Auth.getSession();
-    const res = await fetch(`/api/heroes/${id}`, {
-      method: 'DELETE',
-      headers: { 'x-username': session.username }
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || 'Error al eliminar héroe');
-    }
-    return res.json();
-  }
+/* ---- Endpoint comentarios: POST /api/heroes/:id/comment ---- */
+/* Se accede via rewrite /api/heroes/:id/comment → /api/heroes?id=:id&action=comment */
+async function handleComment(req, res, id) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  const username = req.headers['x-username'];
+  if (!username) return res.status(401).json({ error: 'No autenticado' });
 
-  /* Renderiza una card de héroe */
-  function renderCard(hero) {
-    const elementMap = {
-      fire:   { label: '🔥 Fuego',      cls: 'element-fire'   },
-      ice:    { label: '❄️ Hielo',       cls: 'element-ice'    },
-      nature: { label: '🌿 Naturaleza',  cls: 'element-nature' },
-      dark:   { label: '💜 Oscuridad',   cls: 'element-dark'   },
-      holy:   { label: '✨ Sagrado',     cls: 'element-holy'   }
-    };
-    const el = elementMap[hero.element] || { label: hero.element, cls: '' };
+  const { text } = req.body || {};
+  if (!text || !text.trim()) return res.status(400).json({ error: 'Comentario vacío' });
 
-    const img = hero.imagePath
-      ? `<img class="hero-card-image" src="${hero.imagePath}" alt="${hero.name}" loading="lazy">`
-      : `<div class="hero-card-image-placeholder">⚔</div>`;
+  const { heroes, sha } = await readHeroes();
+  const idx = heroes.findIndex(h => h.id === id);
+  if (idx === -1) return res.status(404).json({ error: 'Héroe no encontrado' });
 
-    const hardStars  = renderStarsHtml(hero.ratingHard || 0, 'red');
-    const coolStars  = renderStarsHtml(hero.ratingCool || 0, 'gold');
+  if (!heroes[idx].comments) heroes[idx].comments = [];
+  heroes[idx].comments.push({
+    id:        require('crypto').randomBytes(4).toString('hex'),
+    author:    username,
+    text:      text.trim(),
+    createdAt: new Date().toISOString()
+  });
 
-    return `
-      <div class="hero-card" onclick="window.location.href='hero-detail.html?id=${hero.id}'">
-        ${img}
-        <div class="hero-card-body">
-          <div class="hero-card-name">${escapeHtml(hero.name)}</div>
-          <div class="hero-card-meta">
-            <span class="element-badge ${el.cls}">${el.label}</span>
-            ${hero.family ? `<span class="badge role-badge">${escapeHtml(hero.family)}</span>` : ''}
-          </div>
-          <div class="hero-card-footer">
-            <div title="Qué jodido es" style="display:flex;gap:1px;">${hardStars}</div>
-            <div title="Qué mola" style="display:flex;gap:1px;">${coolStars}</div>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.4rem;padding-top:0.4rem;border-top:1px solid var(--border-subtle);">
-            <span style="font-size:0.7rem;color:var(--text-muted);">${escapeHtml(hero.createdBy||'')}</span>
-            <span style="font-size:0.7rem;color:var(--text-muted);">${hero.createdAt ? new Date(hero.createdAt).toLocaleDateString('es-ES',{day:'2-digit',month:'short'}) : ''}</span>
-          </div>
-        </div>
-      </div>`;
-  }
-
-  function renderStarsHtml(value, type) {
-    let html = '';
-    for (let i = 1; i <= 5; i++) {
-      const cls = i <= value ? (type === 'red' ? 'filled-red' : 'filled') : '';
-      html += `<span class="star stars-sm ${cls}" style="cursor:default;">★</span>`;
-    }
-    return html;
-  }
-
-  function escapeHtml(str) {
-    return String(str)
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  return { getAll, getById, create, update, remove, renderCard };
-
-})();
+  await writeHeroes(heroes, sha, `comment on hero: ${heroes[idx].name}`);
+  return res.status(200).json(heroes[idx]);
+}
