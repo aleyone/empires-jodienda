@@ -10,6 +10,7 @@
     { "source": "/api/heroes/:id/comment",          "destination": "/api/heroes?id=:id&action=comment" },
     { "source": "/api/changelog/seen",  "destination": "/api/changelog" },
     { "source": "/api/changelog",        "destination": "/api/changelog" },
+    { "source": "/api/jobs/migrate-images",         "destination": "/api/jobs/migrate-images" },
     { "source": "/api/jobs/wiki-check",           "destination": "/api/jobs/wiki-check" },
     { "source": "/api/notifications/:id",          "destination": "/api/notifications?id=:id" },
     { "source": "/api/notifications",              "destination": "/api/notifications" },
