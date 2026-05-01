@@ -41,11 +41,16 @@ module.exports = async (req, res) => {
 function parseHeroWikitext(wikitext, heroName) {
   const result = { name: heroName };
 
-  /* Extrae |campo = valor — para hasta el siguiente | o } o \n */
+  /* Extrae |campo = valor — captura {{plantilla}} completa o texto plano */
   const field = (key) => {
-    const re = new RegExp(`\\|\\s*${key}\\s*=\\s*([^\\|\\}\\n]*)`, 'i');
-    const m  = wikitext.match(re);
-    return m ? m[1].trim() : null;
+    /* Primero intenta capturar {{...}} completo */
+    const re1 = new RegExp(`\\|\\s*${key}\\s*=\\s*(\\{\\{[^}]+\\}\\})`, 'i');
+    const m1  = wikitext.match(re1);
+    if (m1) return m1[1].trim();
+    /* Fallback: texto plano hasta | o \n */
+    const re2 = new RegExp(`\\|\\s*${key}\\s*=\\s*([^\\|\\n{][^\\|\\n]*)`, 'i');
+    const m2  = wikitext.match(re2);
+    return m2 ? m2[1].trim() : null;
   };
 
   /* Limpia wikitext a texto plano */
