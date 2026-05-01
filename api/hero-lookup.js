@@ -52,11 +52,14 @@ function parseHeroWikitext(wikitext, heroName) {
   const clean = (s) => (s || '')
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/<span[^>]*>([^<]*)<\/span>/gi, '$1')        /* <span>text</span> → text */
     .replace(/\[\[(?:[^\]|]*\|)?([^\]]*)\]\]/g, '$1')  /* [[link|text]] → text */
     .replace(/\{\{[^}]*\}\}/g, '')                       /* {{plantilla}} → '' */
     .replace(/<br\s*\/?>/gi, ' ')
     .replace(/<[^>]+>/g, '')
     .replace(/'{2,}/g, '')
+    .replace(/•/g, '•')
     .replace(/\s+/g, ' ')
     .trim();
 
@@ -95,10 +98,17 @@ function parseHeroWikitext(wikitext, heroName) {
   const classRaw = field('class');
   const classMatch = classRaw?.match(/\{\{cl\|(\w+)\}\}/i) || classRaw?.match(/(\w+)/);
   const classMap = {
-    barbarian:'Bárbaro', cleric:'Clérigo', druid:'Druida',
-    fighter:'Guerrero', monk:'Monje', paladin:'Paladín',
-    ranger:'Ranger', rogue:'Pícaro', sorcerer:'Hechicero',
-    wizard:'Mago (Wizard)', titan:'Titán'
+    barbarian:'Bárbaro', bar:'Bárbaro',
+    cleric:'Clérigo', cle:'Clérigo',
+    druid:'Druida', dru:'Druida',
+    fighter:'Guerrero', fig:'Guerrero',
+    monk:'Monje', mon:'Monje',
+    paladin:'Paladín', pal:'Paladín',
+    ranger:'Ranger', ran:'Ranger',
+    rogue:'Pícaro', rog:'Pícaro',
+    sorcerer:'Hechicero', sor:'Hechicero',
+    wizard:'Mago (Wizard)', wiz:'Mago (Wizard)',
+    titan:'Titán', tit:'Titán'
   };
   if (classMatch) result.heroClass = classMap[classMatch[1].toLowerCase()] || classMatch[1];
   if (!result.heroClass) {
@@ -119,12 +129,41 @@ function parseHeroWikitext(wikitext, heroName) {
   const familyRaw = field('family');
   const famMatch = familyRaw?.match(/\{\{family\|(\w+)\}\}/i);
   const famMap = {
-    nin:'Ninja', classic:'Classic', atlantis:'Atlantis', valhalla:'Valhalla',
-    slayer:'Slayer', teltoc:'Teltoc', wonderland:'Wonderland', grimforest:'Grimforest',
-    pirates:'Pirates', seasonal:'Seasonal', sand:'Sand', morlovia:'Morlovia',
-    christmas:'Christmas', villains:'Villains', magic:'Magic', styx:'Styx',
-    legends:'Legends', carnival:'Carnival', circus:'Circus', covenant:'Covenant',
-    dunes:'Dunes', soul:'Soul Exchange', untold:'Untold Tales'
+    nin:'Ninja', ninja:'Ninja',
+    classic:'Classic', cla:'Classic',
+    atl:'Atlantis', atlantis:'Atlantis',
+    val:'Valhalla', valhalla:'Valhalla',
+    sla:'Slayer', slayer:'Slayer',
+    tel:'Teltoc', teltoc:'Teltoc',
+    won:'Wonderland', wonderland:'Wonderland',
+    gri:'Grimforest', grimforest:'Grimforest',
+    pir:'Pirates', pirates:'Pirates',
+    sea:'Seasonal', seasonal:'Seasonal',
+    san:'Sand Empire', sand:'Sand Empire',
+    mor:'Morlovia', morlovia:'Morlovia',
+    chr:'Christmas', christmas:'Christmas',
+    vil:'Villains', villains:'Villains',
+    mag:'Magic', magic:'Magic',
+    stx:'Styx', styx:'Styx',
+    leg:'Legends', legends:'Legends',
+    car:'Carnival', carnival:'Carnival',
+    cir:'Circus', circus:'Circus',
+    cov:'Covenant', covenant:'Covenant',
+    dun:'Dunes', dunes:'Dunes',
+    sol:'Soul Exchange', soul:'Soul Exchange',
+    unt:'Untold Tales', untold:'Untold Tales',
+    nvr:'Nidavellir', nidavellir:'Nidavellir',
+    mid:'Midgard', midgard:'Midgard',
+    alf:'Alfheim', alfheim:'Alfheim',
+    hel:'Helheim', helheim:'Helheim',
+    jot:'Jotunheim', jotunheim:'Jotunheim',
+    msp:'Muspelheim', muspelheim:'Muspelheim',
+    nif:'Niflheim', niflheim:'Niflheim',
+    svg:'Svartalfheim', svartalfheim:'Svartalfheim',
+    lgn:'Lagoon', lagoon:'Lagoon',
+    sak:'Sakura', sakura:'Sakura',
+    def:'Defenders of Atlantis', nightmares:'Nightmares of Atlantis',
+    tof:'Treasures of Flame', ddg:'Nidavellir'
   };
   if (famMatch) {
     result.family = famMap[famMatch[1].toLowerCase()] || famMatch[1];
@@ -132,9 +171,10 @@ function parseHeroWikitext(wikitext, heroName) {
     const cleanFam = clean(familyRaw);
     if (cleanFam && cleanFam.length < 50) result.family = cleanFam;
   }
-  /* Fallback: Category */
+  /* Fallback: Category Family o Realm */
   if (!result.family) {
-    const catFam = wikitext.match(/\[\[Category:([^\]]+?)\s+Family\]\]/i);
+    const catFam = wikitext.match(/\[\[Category:([^\]]+?)\s+Family\]\]/i) ||
+                   wikitext.match(/\[\[Category:([^\]]+?)\s+Realm\]\]/i);
     if (catFam) result.family = catFam[1].trim();
   }
 
