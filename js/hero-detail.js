@@ -140,6 +140,9 @@ function renderHero(h) {
   /* Extras */
   renderHowToBeat(h);
   initComments(h);
+
+  /* Wiki check en segundo plano — Fase 2 */
+  wikiCheck(h);
 }
 
 function setMeta(id, content) {
@@ -276,3 +279,219 @@ function renderComment(c) {
 function escapeHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
+
+/* ============================================================
+   WIKI CHECK — Fase 2
+   ============================================================ */
+
+const FIELD_LABELS = {
+  element:     'Elemento',
+  rarity:      'Rareza',
+  heroClass:   'Clase',
+  manaSpeed:   'Velocidad de maná',
+  family:      'Familia',
+  power:       'Poder de equipo',
+  attack:      'Ataque',
+  defense:     'Defensa',
+  health:      'Vida',
+  specialName: 'Nombre habilidad especial',
+  specialDesc: 'Descripción habilidad'
+};
+
+const HERO_FIELD_MAP = {
+  element:     h => h.element,
+  rarity:      h => h.rarity,
+  heroClass:   h => h.heroClass,
+  manaSpeed:   h => h.manaSpeed,
+  family:      h => h.family,
+  power:       h => h.power,
+  attack:      h => h.attack,
+  defense:     h => h.defense,
+  health:      h => h.health,
+  specialName: h => h.specialName,
+  specialDesc: h => h.specialDesc
+};
+
+let wikiCompareData = null;
+let currentHeroData = null;
+
+/* Lanza la comprobación wiki en segundo plano */
+async function wikiCheck(hero) {
+  console.log('[wikiCheck] starting for:', hero.name);
+  /* Permisos: admin todos, editor solo los suyos, consultor nunca */
+  if (!Auth.canEdit()) { console.log('[wikiCheck] no edit permission'); return; }
+  if (!Auth.isAdmin() && hero.createdBy !== Auth.getUsername()) { console.log('[wikiCheck] not owner'); return; }
+
+  /* ¿Ya visto en esta sesión? */
+  const seenKey = `wiki_seen_${hero.id}`;
+  if (sessionStorage.getItem(seenKey)) { console.log('[wikiCheck] already seen'); return; }
+
+  try {
+    console.log('[wikiCheck] fetching wiki...');
+    const res = await fetch(`/api/hero-lookup?name=${encodeURIComponent(hero.name)}`);
+    console.log('[wikiCheck] response status:', res.status);
+    if (!res.ok) return;
+    const wikiData = await res.json();
+    console.log('[wikiCheck] wikiData:', wikiData);
+    if (wikiData.error) { console.log('[wikiCheck] wiki error:', wikiData.error); return; }
+
+    /* Comprobar si hay diferencias */
+    const diffs = getDiffs(hero, wikiData);
+    console.log('[wikiCheck] diffs:', diffs);
+    if (diffs.length === 0) { console.log('[wikiCheck] no diffs'); return; }
+
+    /* Hay diferencias — guardar y mostrar aviso */
+    wikiCompareData = wikiData;
+    currentHeroData = hero;
+    showWikiAviso(hero);
+
+  } catch(err) { console.log('[wikiCheck] error:', err); }
+}
+
+/* Devuelve array de campos con diferencias */
+function getDiffs(hero, wiki) {
+  return Object.keys(FIELD_LABELS).filter(key => {
+    const heroVal = HERO_FIELD_MAP[key](hero);
+    const wikiVal = wiki[key];
+    if (!wikiVal) return false; /* wiki no tiene dato → no es diff */
+    if (!heroVal) return true;  /* nosotros no tenemos → diff */
+    return String(heroVal).trim() !== String(wikiVal).trim(); /* ambos tienen pero difieren */
+  });
+}
+
+/* ---- MODAL AVISO ---- */
+function showWikiAviso(hero) {
+  const modal  = document.getElementById('modal-wiki-aviso');
+  const nameEl = document.getElementById('wiki-aviso-name');
+  const img    = document.getElementById('wiki-aviso-img');
+  const noImg  = document.getElementById('wiki-aviso-noimg');
+
+  nameEl.textContent = hero.name;
+
+  if (hero.imagePath) {
+    img.src = hero.imagePath;
+    img.style.display = 'block';
+    noImg.style.display = 'none';
+  } else {
+    img.style.display = 'none';
+    noImg.style.display = 'flex';
+  }
+
+  modal.style.display = 'block';
+}
+
+document.getElementById('wiki-aviso-no').addEventListener('click', () => {
+  document.getElementById('modal-wiki-aviso').style.display = 'none';
+  if (currentHeroData) sessionStorage.setItem(`wiki_seen_${currentHeroData.id}`, '1');
+});
+
+document.getElementById('wiki-aviso-revisar').addEventListener('click', () => {
+  document.getElementById('modal-wiki-aviso').style.display = 'none';
+  showCompareTable();
+});
+
+/* ---- TABLA COMPARATIVA ---- */
+function showCompareTable() {
+  const modal = document.getElementById('modal-wiki-compare');
+  const table = document.getElementById('compare-table');
+
+  if (!currentHeroData || !wikiCompareData) return;
+
+  const diffs = getDiffs(currentHeroData, wikiCompareData);
+  table.innerHTML = '';
+
+  /* Cabecera */
+  table.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:0.5rem;padding:0.5rem 0.75rem;border-bottom:1px solid var(--border-gold);">
+      <span style="font-size:0.72rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Campo</span>
+      <span style="font-size:0.72rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Nuestra ficha</span>
+      <span style="font-size:0.72rem;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Wiki</span>
+      <span></span>
+    </div>`;
+
+  diffs.forEach(key => {
+    const heroVal = HERO_FIELD_MAP[key](currentHeroData) || '';
+    const wikiVal = wikiCompareData[key] || '';
+    const isEmpty = !heroVal;
+    const label   = FIELD_LABELS[key];
+
+    const row = document.createElement('div');
+    row.style.cssText = `display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:0.5rem;padding:0.6rem 0.75rem;border-radius:var(--radius-sm);align-items:start;background:${isEmpty ? 'rgba(201,149,42,0.06)' : 'transparent'};border:1px solid ${isEmpty ? 'rgba(201,149,42,0.15)' : 'var(--border-subtle)'};`;
+
+    row.innerHTML = `
+      <span style="font-size:0.82rem;font-weight:600;color:var(--text-secondary);">${label}</span>
+      <span style="font-size:0.82rem;color:${isEmpty ? 'var(--text-muted)' : 'var(--text-primary)'};">${isEmpty ? '— vacío —' : escapeHtml(String(heroVal))}</span>
+      <span style="font-size:0.82rem;color:var(--gold);">${escapeHtml(String(wikiVal))}</span>
+      <input type="checkbox" id="chk_${key}" ${isEmpty ? 'checked' : ''} style="width:16px;height:16px;accent-color:var(--gold);cursor:pointer;margin-top:2px;">`;
+
+    table.appendChild(row);
+  });
+
+  if (diffs.length === 0) {
+    table.innerHTML += `<p style="text-align:center;color:var(--text-muted);padding:1rem;font-size:0.9rem;">No hay diferencias entre nuestra ficha y la wiki.</p>`;
+  }
+
+  modal.style.display = 'block';
+}
+
+/* ---- APLICAR SELECCIONADOS ---- */
+document.getElementById('wiki-apply-btn').addEventListener('click', async () => {
+  if (!currentHeroData || !wikiCompareData) return;
+
+  const updates = {};
+  Object.keys(FIELD_LABELS).forEach(key => {
+    const chk = document.getElementById(`chk_${key}`);
+    if (chk && chk.checked) {
+      updates[key] = wikiCompareData[key];
+    }
+  });
+
+  if (Object.keys(updates).length === 0) {
+    showToast('No hay campos seleccionados', 'info');
+    return;
+  }
+
+  const btn = document.getElementById('wiki-apply-btn');
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+
+  try {
+    /* Merge con datos actuales + campos actualizados + metadata */
+    const updatedHero = {
+      ...currentHeroData,
+      ...updates,
+      wikiCheckedAt: new Date().toISOString(),
+      wikiHasUpdates: false
+    };
+
+    const res = await fetch(`/api/heroes/${currentHeroData.id}`, {
+      method: 'PUT',
+      headers: { 'x-username': Auth.getUsername() },
+      body: (() => {
+        const fd = new FormData();
+        fd.append('data', JSON.stringify(updatedHero));
+        return fd;
+      })()
+    });
+
+    if (!res.ok) throw new Error('Error al guardar');
+
+    showToast('Ficha actualizada con datos de la wiki ✓', 'success');
+    document.getElementById('modal-wiki-compare').style.display = 'none';
+    sessionStorage.setItem(`wiki_seen_${currentHeroData.id}`, '1');
+
+    /* Recargar ficha */
+    setTimeout(() => window.location.reload(), 1000);
+
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✓ Actualizar campos seleccionados';
+  }
+});
+
+document.getElementById('wiki-compare-cancel').addEventListener('click', () => {
+  document.getElementById('modal-wiki-compare').style.display = 'none';
+  if (currentHeroData) sessionStorage.setItem(`wiki_seen_${currentHeroData.id}`, '1');
+});
