@@ -65,9 +65,13 @@
       "howToBeat": "",
       "ratingHard": 4,
       "ratingCool": 4,
-      "imagePath": null,
+      "imagePath": "https://static.wikia.nocookie.net/empiresandpuzzles/images/2/2e/Dagr.jpg/revision/latest?cb=20250201234003",
       "createdBy": "david",
-      "createdAt": "2026-05-01T14:24:58.144Z"
+      "createdAt": "2026-05-01T14:24:58.144Z",
+      "wikiCheckedAt": "2026-05-01T15:15:51.651Z",
+      "wikiHasUpdates": false,
+      "updatedAt": "2026-05-01T15:15:51.891Z",
+      "updatedBy": "david"
     },
     {
       "id": "a0d65cf6d6c3",
