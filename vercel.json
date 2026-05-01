@@ -8,6 +8,8 @@
     { "source": "/api/users/change-password",       "destination": "/api/users" },
     { "source": "/api/users/:username",             "destination": "/api/users?username=:username" },
     { "source": "/api/heroes/:id/comment",          "destination": "/api/heroes?id=:id&action=comment" },
+    { "source": "/api/image-proxy",                 "destination": "/api/image-proxy" },
+    { "source": "/api/hero-lookup",                 "destination": "/api/hero-lookup" },
     { "source": "/api/heroes/:id",                  "destination": "/api/heroes?id=:id" }
   ]
 }
