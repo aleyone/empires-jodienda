@@ -41,6 +41,28 @@
       "imagePath": "https://raw.githubusercontent.com/aleyone/empires-jodienda/main/img/heroes/1777548064509-6386de2b.jpg",
       "createdBy": "adrian",
       "createdAt": "2026-04-30T11:21:07.496Z"
+    },
+    {
+      "id": "4158ed5e9206",
+      "name": "leonidas",
+      "element": "holy",
+      "rarity": "5",
+      "family": "Classic",
+      "heroClass": "Monje",
+      "manaSpeed": "Promedio",
+      "power": "752",
+      "attack": "731",
+      "defense": "718",
+      "health": "1221",
+      "specialName": "Spartan Cleave",
+      "specialDesc": "Deals 415% damage to the target\nReduces the mana of the target by 40%\nHeals the caster for 75% of damage dealt",
+      "notes": "",
+      "howToBeat": "",
+      "ratingHard": 0,
+      "ratingCool": 0,
+      "imagePath": null,
+      "createdBy": "david",
+      "createdAt": "2026-05-01T14:21:24.994Z"
     }
   ]
 }
