@@ -41,6 +41,28 @@
       "imagePath": "https://raw.githubusercontent.com/aleyone/empires-jodienda/main/img/heroes/1777548064509-6386de2b.jpg",
       "createdBy": "adrian",
       "createdAt": "2026-04-30T11:21:07.496Z"
+    },
+    {
+      "id": "d36c8eedff9b",
+      "name": "dagr",
+      "element": "nature",
+      "rarity": "5",
+      "family": "Nidavellir",
+      "heroClass": "Clérigo",
+      "manaSpeed": "Promedio",
+      "power": "1154",
+      "attack": "1207",
+      "defense": "1137",
+      "health": "2064",
+      "specialName": "Blazing Venom",
+      "specialDesc": "Attacks all enemies with Firestorm Strike, dealing up to 1400 damage. Deals 40% more if the target is of the Nature element. This attack never misses its targets.\nDamage bypasses target’s Minions.\nAll enemies receive 384 Poison damage over 4 turns.\nAll enemies take +45% increased damage from Burn and Poison status ailments for 4 turns.",
+      "notes": "",
+      "howToBeat": "",
+      "ratingHard": 4,
+      "ratingCool": 4,
+      "imagePath": null,
+      "createdBy": "david",
+      "createdAt": "2026-05-01T14:24:58.144Z"
     }
   ]
 }
