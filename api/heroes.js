@@ -77,9 +77,13 @@ async function handler(req, res) {
 
         let imagePath = heroes[idx].imagePath;
         if (imageBuffer && imageBuffer.length > 0) {
+          /* Nueva imagen subida — sube a GitHub */
           const filename = `${Date.now()}-${crypto.randomBytes(4).toString('hex')}.${imageExt}`;
           imagePath = await uploadImage(filename, imageBuffer);
           await delay(2000);
+        } else if (heroData.imagePath && heroData.imagePath !== heroes[idx].imagePath) {
+          /* URL de imagen externa (ej: wiki) — guardar directamente */
+          imagePath = heroData.imagePath;
         }
 
         heroes[idx] = {
