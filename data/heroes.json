@@ -5,10 +5,10 @@
       "name": "Bane",
       "element": "holy",
       "rarity": "3",
-      "family": "Top",
-      "heroClass": "Fighter",
+      "family": "",
+      "heroClass": "",
       "manaSpeed": "Rápido",
-      "power": "440",
+      "power": "",
       "attack": "469",
       "defense": "410",
       "health": "693",
@@ -19,7 +19,10 @@
       "ratingCool": 1,
       "imagePath": "https://raw.githubusercontent.com/aleyone/empires-jodienda/main/img/heroes/1777546398603-062f4cbf.jpg",
       "createdBy": "david",
-      "createdAt": "2026-04-30T10:53:21.700Z"
+      "createdAt": "2026-04-30T10:53:21.700Z",
+      "howToBeat": "",
+      "updatedAt": "2026-05-01T14:34:48.399Z",
+      "updatedBy": "david"
     },
     {
       "id": "a723d90b4939",
