@@ -32,7 +32,10 @@ module.exports = async (req, res) => {
     /* Solo usar el primer bloque {{Hero}} — ignorar costumes */
     const firstHeroBlock = extractFirstHeroBlock(fullWikitext);
 
-    return res.status(200).json(parseHeroWikitext(firstHeroBlock, heroName));
+    console.log('[hero-lookup] first block sample:', firstHeroBlock.slice(0,300));
+    const parsed = parseHeroWikitext(firstHeroBlock, heroName);
+    console.log('[hero-lookup] parsed:', JSON.stringify(parsed));
+    return res.status(200).json(parsed);
 
   } catch (err) {
     console.error('[hero-lookup]', err.message);
@@ -117,7 +120,7 @@ function parseHeroWikitext(wikitext, heroName) {
   }
 
   /* ---- CLASE — {{cl|wizard}} ---- */
-  const classRaw = field('class');
+  const classRaw = field('class') || field('hero_class');
   const classMatch = classRaw?.match(/\{\{cl\|(\w+)\}\}/i) || classRaw?.match(/(\w+)/);
   const classMap = {
     barbarian:'Bárbaro', bar:'Bárbaro', brb:'Bárbaro',
