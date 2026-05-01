@@ -159,11 +159,55 @@ async function writeNotifications(notifications, sha, message = 'update notifica
 }
 
 
+/* ---- Subir imagen a Cloudinary ---- */
+async function uploadImageCloudinary(filename, buffer) {
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+  const apiKey    = process.env.CLOUDINARY_API_KEY;
+  const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+  if (!cloudName || !apiKey || !apiSecret) {
+    throw new Error('Cloudinary no configurado');
+  }
+
+  /* Generar firma para autenticación */
+  const crypto    = require('crypto');
+  const timestamp = Math.floor(Date.now() / 1000);
+  const publicId  = `mini-kripta/heroes/${filename.replace(/\.[^.]+$/, '')}`;
+  const folder    = 'mini-kripta/heroes';
+
+  const toSign    = `folder=${folder}&public_id=${publicId}&timestamp=${timestamp}${apiSecret}`;
+  const signature = crypto.createHash('sha1').update(toSign).digest('hex');
+
+  /* Subir via API REST de Cloudinary */
+  const FormData  = require('form-data');
+  const form      = new FormData();
+  form.append('file',       `data:image/jpeg;base64,${buffer.toString('base64')}`);
+  form.append('api_key',    apiKey);
+  form.append('timestamp',  timestamp);
+  form.append('public_id',  publicId);
+  form.append('folder',     folder);
+  form.append('signature',  signature);
+
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+    method: 'POST',
+    body:   form
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(`Cloudinary error: ${err.error?.message || res.status}`);
+  }
+
+  const data = await res.json();
+  return data.secure_url;
+}
+
+
 module.exports = {
   hashPassword,
   readUsers, writeUsers,
   readHeroes, writeHeroes,
   readNotifications, writeNotifications,
-  uploadImage, deleteFile,
+  uploadImage, uploadImageCloudinary, deleteFile,
   checkRole
 };

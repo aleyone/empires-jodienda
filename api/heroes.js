@@ -2,7 +2,7 @@
    Vercel: bodyParser desactivado para recibir multipart correctamente
 */
 
-const { readHeroes, writeHeroes, uploadImage, deleteFile, checkRole } = require('./_helpers');
+const { readHeroes, writeHeroes, uploadImage, uploadImageCloudinary, deleteFile, checkRole } = require('./_helpers');
 const formidable = require('formidable');
 const fs         = require('fs');
 const crypto     = require('crypto');
@@ -42,8 +42,13 @@ async function handler(req, res) {
         let imagePath = null;
         if (imageBuffer && imageBuffer.length > 0) {
           const filename = `${Date.now()}-${crypto.randomBytes(4).toString('hex')}.${imageExt}`;
-          imagePath = await uploadImage(filename, imageBuffer);
-          await delay(2000);
+          try {
+            imagePath = await uploadImageCloudinary(filename, imageBuffer);
+          } catch (e) {
+            console.error('[heroes] Cloudinary fallback to GitHub:', e.message);
+            imagePath = await uploadImage(filename, imageBuffer);
+            await delay(2000);
+          }
         }
 
         const { heroes, sha } = await readHeroes();
