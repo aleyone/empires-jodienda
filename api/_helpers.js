@@ -169,7 +169,6 @@ async function uploadImageCloudinary(filename, buffer) {
     throw new Error('Cloudinary no configurado');
   }
 
-  /* Generar firma para autenticación */
   const crypto    = require('crypto');
   const timestamp = Math.floor(Date.now() / 1000);
   const publicId  = `mini-kripta/heroes/${filename.replace(/\.[^.]+$/, '')}`;
@@ -178,19 +177,21 @@ async function uploadImageCloudinary(filename, buffer) {
   const toSign    = `folder=${folder}&public_id=${publicId}&timestamp=${timestamp}${apiSecret}`;
   const signature = crypto.createHash('sha1').update(toSign).digest('hex');
 
-  /* Subir via API REST de Cloudinary */
-  const FormData  = require('form-data');
-  const form      = new FormData();
-  form.append('file',       `data:image/jpeg;base64,${buffer.toString('base64')}`);
-  form.append('api_key',    apiKey);
-  form.append('timestamp',  timestamp);
-  form.append('public_id',  publicId);
-  form.append('folder',     folder);
-  form.append('signature',  signature);
+  /* Usar URLSearchParams — no necesita form-data */
+  const base64 = `data:image/jpeg;base64,${buffer.toString('base64')}`;
+  const params  = new URLSearchParams({
+    file:      base64,
+    api_key:   apiKey,
+    timestamp: timestamp,
+    public_id: publicId,
+    folder:    folder,
+    signature: signature
+  });
 
   const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-    method: 'POST',
-    body:   form
+    method:  'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body:    params.toString()
   });
 
   if (!res.ok) {
