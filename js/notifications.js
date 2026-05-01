@@ -66,7 +66,14 @@ const Notifications = (() => {
 
     container.querySelectorAll('[data-notif-summary]').forEach(btn => {
       btn.addEventListener('click', () => {
-        window.location.href = `notifications.html`;
+        window.location.href = 'notifications.html';
+      });
+    });
+
+    /* Click en notif de héroe individual → ir a la ficha */
+    container.querySelectorAll('[data-notif-hero]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        window.location.href = `hero-detail.html?id=${btn.dataset.notifHero}`;
       });
     });
   }
