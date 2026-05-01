@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Historial de versiones – Mini Kripta · Empires &amp; Puzzles</title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" href="/img/icon-192.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#c9952a">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div class="page-wrapper">
+
+  <nav class="navbar">
+    <div class="container navbar-inner">
+      <a href="index.html" style="text-decoration:none;display:flex;flex-direction:row;align-items:center;gap:0.6rem;">
+        <img src="/img/logo-48.png" alt="Mini Kripta" style="width:32px;height:32px;object-fit:contain;flex-shrink:0;display:block;">
+        <span style="font-family:'Cinzel',serif;font-size:0.75rem;letter-spacing:2px;color:var(--gold);text-transform:uppercase;white-space:nowrap;">Empires &amp; Puzzles</span>
+        <span style="color:var(--text-muted);font-size:0.7rem;">·</span>
+        <span style="font-family:'Cinzel',serif;font-size:1rem;font-weight:700;color:var(--text-primary);white-space:nowrap;">Mini <span style="color:var(--gold);">Kripta</span></span>
+      </a>
+      <div class="navbar-actions">
+        <a href="index.html" class="btn btn-ghost btn-sm">← Volver</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="container" style="max-width:640px;">
+
+      <div class="section-header mb-3">
+        <span class="section-title">📋 Historial de versiones</span>
+      </div>
+
+      <div id="changelog-content" style="display:flex;flex-direction:column;gap:1.5rem;">
+        <div class="empty-state">
+          <span class="empty-state-icon">⏳</span>
+          <p class="empty-state-title">Cargando...</p>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="css/../js/utils.js"></script>
+<script>
+async function loadChangelog() {
+  try {
+    const res  = await fetch('/api/changelog');
+    const data = await res.json();
+    const container = document.getElementById('changelog-content');
+    container.innerHTML = '';
+
+    data.versions.forEach((v, idx) => {
+      const isLatest = v.version === data.currentVersion;
+      const card = document.createElement('div');
+      card.style.cssText = `background:var(--bg-card);border:1px solid ${isLatest ? 'var(--border-gold)' : 'var(--border-subtle)'};border-radius:var(--radius-lg);overflow:hidden;`;
+
+      card.innerHTML = `
+        <div style="padding:1rem 1.25rem;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:space-between;gap:1rem;background:${isLatest ? 'rgba(201,149,42,0.06)' : 'transparent'};">
+          <div>
+            <div style="display:flex;align-items:center;gap:0.5rem;">
+              <span style="font-family:'Cinzel',serif;font-size:1rem;font-weight:700;color:var(--gold);">v${v.version}</span>
+              ${isLatest ? '<span style="background:var(--gold);color:#0a0810;font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:10px;letter-spacing:0.5px;">ACTUAL</span>' : ''}
+            </div>
+            <div style="font-family:'Cinzel',serif;font-size:0.85rem;color:var(--text-primary);margin-top:0.15rem;">${v.title}</div>
+          </div>
+          <div style="font-size:0.75rem;color:var(--text-muted);white-space:nowrap;">${formatDate(v.date)}</div>
+        </div>
+        <ul style="list-style:none;padding:1rem 1.25rem;margin:0;display:flex;flex-direction:column;gap:0.4rem;">
+          ${v.changes.map(c => `
+            <li style="display:flex;align-items:flex-start;gap:0.5rem;font-size:0.88rem;color:var(--text-secondary);line-height:1.5;">
+              <span style="color:var(--gold);flex-shrink:0;margin-top:2px;">◆</span>
+              ${c}
+            </li>`).join('')}
+        </ul>`;
+
+      container.appendChild(card);
+    });
+  } catch {
+    document.getElementById('changelog-content').innerHTML = '<p class="text-muted text-center">Error al cargar el historial.</p>';
+  }
+}
+
+loadChangelog();
+</script>
+</body>
+</html>
