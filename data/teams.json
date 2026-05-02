@@ -30,9 +30,23 @@
             "imagePath": "https://static.wikia.nocookie.net/empiresandpuzzles/images/9/96/Archibald.jpg/revision/latest?cb=20250319203757",
             "specialName": "Suspicious Stew"
           }
+        },
+        {
+          "position": 3,
+          "heroId": null,
+          "heroData": {
+            "name": "odile",
+            "element": "",
+            "rarity": "",
+            "heroClass": "",
+            "manaSpeed": "",
+            "family": "",
+            "imagePath": null,
+            "specialName": ""
+          }
         }
       ],
-      "updatedAt": "2026-05-02T00:34:16.471Z"
+      "updatedAt": "2026-05-02T00:34:26.743Z"
     }
   ]
 }
