@@ -1,7 +1,7 @@
 {
   "users": [
     {
-      "username": "david",
+      "username": "_^Dune^_",
       "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
       "email": "aleyone@gmail.com",
       "role": "admin",
@@ -10,7 +10,7 @@
       "lastSeenVersion": "1.7"
     },
     {
-      "username": "adrian",
+      "username": "KSanya",
       "passwordHash": "3333e62a862d32a24acf73d98d99fe0c5bfb9124b4ace05d15c32c870d79b7af",
       "email": "adrianksanya@gmail.com",
       "role": "admin",
@@ -18,7 +18,7 @@
       "createdAt": "2025-01-01T00:00:00.000Z"
     },
     {
-      "username": "ray",
+      "username": "Leeroux",
       "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
       "email": "",
       "role": "editor",
@@ -26,7 +26,7 @@
       "createdAt": "2025-01-01T00:00:00.000Z"
     },
     {
-      "username": "chris",
+      "username": "Chris",
       "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
       "email": "",
       "role": "editor",
