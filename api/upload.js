@@ -2,7 +2,7 @@
    POST /api/upload — sube una imagen a Cloudinary y devuelve la URL
 */
 
-const formidable = require('formidable');
+const { IncomingForm } = require('formidable');
 const fs         = require('fs');
 
 module.exports.config = { api: { bodyParser: false } };
@@ -24,7 +24,7 @@ module.exports = async (req, res) => {
     }
 
     /* Parsear el fichero */
-    const form = formidable({ maxFileSize: 5 * 1024 * 1024 });
+    const form = new IncomingForm({ maxFileSize: 5 * 1024 * 1024 });
     const [, files] = await new Promise((resolve, reject) => {
       form.parse(req, (err, fields, files) => {
         if (err) reject(err);
