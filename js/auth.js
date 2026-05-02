@@ -113,7 +113,11 @@ const Auth = (() => {
     const btnAdd    = document.getElementById('btn-add-hero');
     const btnLogout = document.getElementById('btn-logout');
 
-    if (avatar)   avatar.textContent = session.username.charAt(0).toUpperCase();
+    if (avatar) {
+      /* Buscar primera letra (ignorar caracteres no alfanuméricos al inicio) */
+      const firstLetter = (session.username.match(/[a-zA-ZáéíóúÁÉÍÓÚñÑ]/) || ['?'])[0];
+      avatar.textContent = firstLetter.toUpperCase();
+    }
     if (username) username.textContent = session.username;
     if (menuAdmin && isAdmin()) menuAdmin.style.display = 'block';
     if (btnAdd && canEdit())    btnAdd.style.display = 'inline-flex';

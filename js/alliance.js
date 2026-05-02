@@ -48,7 +48,7 @@ async function loadAlliance() {
 function renderMemberCard(team, bestiario, users = []) {
   const user        = users.find(u => u.username === team.username);
   const displayName = user?.allianceName || team.username;
-  const initial     = displayName.charAt(0).toUpperCase();
+  const initial     = (displayName.match(/[a-zA-ZáéíóúÁÉÍÓÚñÑ]/) || ['?'])[0].toUpperCase();
   const slots   = [1,2,3,4,5].map(pos => {
     const slot = team.heroes.find(h => h.position === pos);
     if (!slot) return `<div style="width:56px;height:70px;background:var(--bg-surface);border:1px dashed var(--border-subtle);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:1.2rem;">+</div>`;
