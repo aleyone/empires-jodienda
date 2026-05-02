@@ -36,17 +36,17 @@
           "heroId": null,
           "heroData": {
             "name": "odile",
-            "element": "",
-            "rarity": "",
-            "heroClass": "",
-            "manaSpeed": "",
-            "family": "",
-            "imagePath": null,
-            "specialName": ""
+            "element": "dark",
+            "rarity": "5",
+            "heroClass": "Pícaro",
+            "manaSpeed": "Rápido",
+            "family": "opr",
+            "imagePath": "https://static.wikia.nocookie.net/empiresandpuzzles/images/e/eb/Odile.jpg/revision/latest?cb=20240328003344",
+            "specialName": "Dance of the Black Swan"
           }
         }
       ],
-      "updatedAt": "2026-05-02T00:34:26.743Z"
+      "updatedAt": "2026-05-02T00:34:39.908Z"
     }
   ]
 }
