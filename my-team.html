@@ -65,7 +65,10 @@
     <!-- Nombre + búsqueda wiki -->
     <div class="form-group">
       <label class="form-label">Nombre del héroe <span class="required">*</span></label>
-      <input class="form-control" type="text" id="team-hero-name" placeholder="Ej: Kage, Cobalt, Frigg...">
+      <div style="display:flex;gap:0.5rem;">
+        <input class="form-control" type="text" id="team-hero-name" placeholder="Ej: Kage, Cobalt, Frigg..." style="flex:1;">
+        <button type="button" id="team-search-btn" class="btn btn-secondary" style="white-space:nowrap;flex-shrink:0;">🔍 Buscar</button>
+      </div>
       <div id="team-wiki-status" style="font-size:0.78rem;margin-top:0.3rem;color:var(--text-muted);display:none;"></div>
     </div>
 
