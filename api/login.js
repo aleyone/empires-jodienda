@@ -40,7 +40,8 @@ module.exports = async (req, res) => {
       role:            user.role,
       email:           user.email || '',
       lastSeenVersion: user.lastSeenVersion || null,
-      allianceName:    user.allianceName || ''
+      allianceName:    user.allianceName || '',
+      warParticipant:  user.warParticipant || false
     };
 
     if (user.firstLogin) {

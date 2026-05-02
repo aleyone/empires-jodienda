@@ -56,7 +56,8 @@ module.exports = async (req, res) => {
           role:         u.role,
           firstLogin:   u.firstLogin || false,
           createdAt:    u.createdAt,
-          allianceName: u.allianceName || ''
+          allianceName:   u.allianceName || '',
+          warParticipant: u.warParticipant || false
         }));
         return res.status(200).json({ users: safe });
       }
@@ -100,6 +101,7 @@ module.exports = async (req, res) => {
         }
         if (email !== undefined) users[idx].email = email;
         if (req.body.allianceName !== undefined) users[idx].allianceName = req.body.allianceName;
+        if (req.body.warParticipant !== undefined) users[idx].warParticipant = req.body.warParticipant;
         if (role) users[idx].role = role;
         await writeUsers(users, sha, `update user: ${username}`);
         return res.status(200).json({ ok: true });
