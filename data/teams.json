@@ -16,9 +16,23 @@
             "imagePath": "https://static.wikia.nocookie.net/empiresandpuzzles/images/b/b3/Gardered_%28The_Daremoth%29.jpg/revision/latest?cb=20251024191651",
             "specialName": "Triple Stab"
           }
+        },
+        {
+          "position": 2,
+          "heroId": null,
+          "heroData": {
+            "name": "archibald",
+            "element": "nature",
+            "rarity": "5",
+            "heroClass": "Bárbaro",
+            "manaSpeed": "Promedio",
+            "family": "ggd",
+            "imagePath": "https://static.wikia.nocookie.net/empiresandpuzzles/images/9/96/Archibald.jpg/revision/latest?cb=20250319203757",
+            "specialName": "Suspicious Stew"
+          }
         }
       ],
-      "updatedAt": "2026-05-02T00:33:58.567Z"
+      "updatedAt": "2026-05-02T00:34:16.471Z"
     }
   ]
 }
