@@ -55,11 +55,11 @@ function renderMemberCard(team, bestiario, users = []) {
 
     /* Resolver datos del héroe */
     let hero = null;
-    if (slot.heroId) hero = bestiario.find(h => h.id === slot.heroId);
+    if (slot.heroId) hero = bestiario.find(h => h.id === slot.heroId) || null;
     const data     = hero || slot.heroData || {};
     const imgPath  = data.imagePath || null;
     const element  = ELEMENT_ICONS[data.element] || '⚔';
-    const name     = data.name || '?';
+    const name     = data.name || (slot.heroId ? '?' : '?');
 
     return `
       <div style="position:relative;width:56px;" title="${name}">
