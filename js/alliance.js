@@ -79,6 +79,7 @@ function renderMemberCard(team, bestiario, users = []) {
           <div style="font-family:'Cinzel',serif;font-weight:700;font-size:0.95rem;color:var(--text-primary);">${displayName}</div>
           ${user?.allianceName ? `<div style="font-size:0.72rem;color:var(--text-muted);">${team.username}</div>` : ''}
           ${team.updatedAt ? `<div style="font-size:0.72rem;color:var(--text-muted);">Actualizado ${formatDate(team.updatedAt)}</div>` : ''}
+          ${user?.warParticipant ? `<div style="font-size:0.72rem;color:var(--gold);margin-top:0.2rem;">⚔ Participa en guerra</div>` : `<div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.2rem;">— No participa en guerra</div>`}
         </div>
         ${Auth.isAdmin() ? `<a href="my-team.html?user=${team.username}" class="btn btn-ghost btn-sm" style="margin-left:auto;">Editar</a>` : ''}
       </div>

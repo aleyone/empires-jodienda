@@ -30,7 +30,8 @@ const Auth = (() => {
       role:            user.role,
       email:           user.email || '',
       lastSeenVersion: user.lastSeenVersion || null,
-      allianceName:    user.allianceName || ''
+      allianceName:    user.allianceName || '',
+      warParticipant:  user.warParticipant || false
     });
     sessionStorage.setItem(SESSION_KEY, data);
     localStorage.setItem(SESSION_KEY, data);
