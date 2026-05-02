@@ -7,7 +7,7 @@
       "role": "admin",
       "firstLogin": false,
       "createdAt": "2025-01-01T00:00:00.000Z",
-      "lastSeenVersion": "2.0"
+      "lastSeenVersion": "1.7"
     },
     {
       "username": "KSanya",
@@ -42,6 +42,102 @@
       "createdAt": "2026-04-30T10:54:20.658Z",
       "resetToken": null,
       "resetTokenAt": null
+    },
+    {
+      "username": "SirCrisis",
+      "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+      "email": "",
+      "role": "editor",
+      "firstLogin": true,
+      "createdAt": "2026-05-02T00:00:00.000Z"
+    },
+    {
+      "username": "DarkAngel",
+      "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+      "email": "",
+      "role": "editor",
+      "firstLogin": true,
+      "createdAt": "2026-05-02T00:00:00.000Z"
+    },
+    {
+      "username": "Pedro",
+      "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+      "email": "",
+      "role": "editor",
+      "firstLogin": true,
+      "createdAt": "2026-05-02T00:00:00.000Z"
+    },
+    {
+      "username": "el*negro666",
+      "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+      "email": "",
+      "role": "editor",
+      "firstLogin": true,
+      "createdAt": "2026-05-02T00:00:00.000Z"
+    },
+    {
+      "username": "DonDa",
+      "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+      "email": "",
+      "role": "editor",
+      "firstLogin": true,
+      "createdAt": "2026-05-02T00:00:00.000Z"
+    },
+    {
+      "username": "ChantaKloss",
+      "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+      "email": "",
+      "role": "editor",
+      "firstLogin": true,
+      "createdAt": "2026-05-02T00:00:00.000Z"
+    },
+    {
+      "username": "HaroldSam",
+      "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+      "email": "",
+      "role": "editor",
+      "firstLogin": true,
+      "createdAt": "2026-05-02T00:00:00.000Z"
+    },
+    {
+      "username": "Kitiara",
+      "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+      "email": "",
+      "role": "editor",
+      "firstLogin": true,
+      "createdAt": "2026-05-02T00:00:00.000Z"
+    },
+    {
+      "username": "R.E.N.N.2017",
+      "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+      "email": "",
+      "role": "editor",
+      "firstLogin": true,
+      "createdAt": "2026-05-02T00:00:00.000Z"
+    },
+    {
+      "username": "Danna",
+      "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+      "email": "",
+      "role": "editor",
+      "firstLogin": true,
+      "createdAt": "2026-05-02T00:00:00.000Z"
+    },
+    {
+      "username": "Montrica",
+      "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+      "email": "",
+      "role": "editor",
+      "firstLogin": true,
+      "createdAt": "2026-05-02T00:00:00.000Z"
+    },
+    {
+      "username": "Krayton",
+      "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+      "email": "",
+      "role": "editor",
+      "firstLogin": true,
+      "createdAt": "2026-05-02T00:00:00.000Z"
     }
   ]
 }
