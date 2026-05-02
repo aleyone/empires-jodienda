@@ -79,6 +79,15 @@
           <span class="form-hint">Este nombre se muestra en la vista de la alianza.</span>
         </div>
         <div class="form-group">
+          <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;">
+            <input type="checkbox" id="p-war" style="width:18px;height:18px;accent-color:var(--gold);flex-shrink:0;">
+            <div>
+              <span class="form-label" style="margin-bottom:0;">Participo en guerra de alianza</span>
+              <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.1rem;">Se mostrará en la vista de la alianza</div>
+            </div>
+          </label>
+        </div>
+        <div class="form-group">
           <label class="form-label" for="p-email">Email</label>
           <input class="form-control" type="email" id="p-email" placeholder="correo@ejemplo.com">
           <span class="form-error" id="err-p-email"></span>
@@ -138,6 +147,7 @@
   document.getElementById('p-username').value           = session.username;
   document.getElementById('p-email').value              = session.email || '';
   document.getElementById('p-alliance-name').value      = session.allianceName || '';
+  document.getElementById('p-war').checked              = session.warParticipant || false;
 
   /* ---- GUARDAR DATOS DE ACCESO ---- */
   document.getElementById('profile-form').addEventListener('submit', async (e) => {
@@ -158,7 +168,7 @@
       const res = await fetch(`/api/users/${session.username}`, {
         method:  'PUT',
         headers: { 'Content-Type': 'application/json', 'x-username': session.username },
-        body:    JSON.stringify({ username: newUsername, email: newEmail, allianceName: document.getElementById('p-alliance-name').value.trim() })
+        body:    JSON.stringify({ username: newUsername, email: newEmail, allianceName: document.getElementById('p-alliance-name').value.trim(), warParticipant: document.getElementById('p-war').checked })
       });
 
       if (!res.ok) {
@@ -168,7 +178,8 @@
 
       /* Actualizar sesión con nuevos datos */
       const newAllianceName = document.getElementById('p-alliance-name').value.trim();
-      Auth.setSession({ ...session, username: newUsername, email: newEmail, allianceName: newAllianceName });
+      const warParticipant = document.getElementById('p-war').checked;
+      Auth.setSession({ ...session, username: newUsername, email: newEmail, allianceName: newAllianceName, warParticipant });
       document.getElementById('profile-avatar').textContent = newUsername.charAt(0).toUpperCase();
       document.getElementById('profile-name').textContent   = newUsername;
       document.getElementById('profile-email').textContent  = newEmail || 'Sin email registrado';
