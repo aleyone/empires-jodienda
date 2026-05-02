@@ -2,6 +2,18 @@
   "version": 2,
   "rewrites": [
     {
+      "source": "/api/teams",
+      "destination": "/api/teams"
+    },
+    {
+      "source": "/api/teams/:username",
+      "destination": "/api/teams?username=:username"
+    },
+    {
+      "source": "/api/teams/:username/:position",
+      "destination": "/api/teams?username=:username&position=:position"
+    },
+    {
       "source": "/api/upload",
       "destination": "/api/upload"
     },
