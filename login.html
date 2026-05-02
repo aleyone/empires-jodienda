@@ -89,6 +89,19 @@
         <input class="form-control" type="password" id="fl-confirm" placeholder="repite la contraseña" required>
         <span class="form-error" id="err-fl-confirm"></span>
       </div>
+      <!-- AVISO DE PRIVACIDAD -->
+      <div style="background:var(--bg-surface);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:1rem;margin-bottom:1rem;">
+        <p style="font-size:0.78rem;color:var(--text-secondary);line-height:1.6;margin-bottom:0.75rem;">
+          <strong style="color:var(--text-primary);">Aviso de privacidad</strong><br>
+          Los datos recopilados — nombre de usuario y correo electrónico — se almacenan con el único objetivo de gestionar tu acceso a Mini Kripta. En ningún momento se utilizan para ningún otro fin, no se comparten con terceros y no se usan con fines comerciales o publicitarios.
+        </p>
+        <label style="display:flex;align-items:flex-start;gap:0.6rem;cursor:pointer;">
+          <input type="checkbox" id="fl-privacy" style="margin-top:3px;accent-color:var(--gold);flex-shrink:0;">
+          <span style="font-size:0.8rem;color:var(--text-secondary);">He leído y acepto el aviso de privacidad</span>
+        </label>
+        <span class="form-error" id="err-fl-privacy"></span>
+      </div>
+
       <button type="submit" class="btn btn-primary btn-full mt-1">Guardar y entrar</button>
     </form>
   </div>
