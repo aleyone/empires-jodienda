@@ -1,7 +1,7 @@
 {
   "teams": [
     {
-      "username": "david",
+      "username": "_^Dune^_",
       "heroes": [
         {
           "position": 1,
@@ -68,7 +68,7 @@
       "updatedAt": "2026-05-02T00:35:12.708Z"
     },
     {
-      "username": "adrian",
+      "username": "KSanya",
       "heroes": [
         {
           "position": 1,
@@ -81,7 +81,7 @@
             "manaSpeed": "Changing Tides",
             "family": "doa",
             "imagePath": "https://static.wikia.nocookie.net/empiresandpuzzles/images/d/dc/Thalassa.jpg/revision/latest?cb=20230620025555",
-            "specialName": "Ocean’s Embrace"
+            "specialName": "Ocean's Embrace"
           }
         },
         {
