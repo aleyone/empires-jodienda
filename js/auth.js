@@ -116,6 +116,9 @@ const Auth = (() => {
     if (menuAdmin && isAdmin()) menuAdmin.style.display = 'block';
     if (btnAdd && canEdit())    btnAdd.style.display = 'inline-flex';
 
+    const menuMyTeam = document.getElementById('menu-my-team');
+    if (menuMyTeam && canEdit()) menuMyTeam.style.display = '';
+
     if (menuBtn && menu) {
       menuBtn.addEventListener('click', (e) => {
         e.stopPropagation();
