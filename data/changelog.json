@@ -1,6 +1,19 @@
 {
-  "currentVersion": "1.7",
+  "currentVersion": "2.0",
   "versions": [
+    {
+      "version": "2.0",
+      "date": "2026-05-02",
+      "title": "Equipos de la Alianza",
+      "changes": [
+        "Nueva sección 'La Alianza' con vista pública de todos los miembros y sus equipos",
+        "Cada miembro puede configurar su equipo de hasta 5 héroes",
+        "Al añadir un héroe al equipo se busca automáticamente en el bestiario y en la wiki",
+        "Nombre de alianza personalizable en el perfil, visible en la vista de la alianza",
+        "Los admins pueden gestionar el equipo de cualquier usuario",
+        "Acceso rápido a 'Mi equipo' desde el menú de usuario"
+      ]
+    },
     {
       "version": "1.7",
       "date": "2026-05-02",
