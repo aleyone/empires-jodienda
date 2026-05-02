@@ -83,9 +83,23 @@
             "imagePath": "https://static.wikia.nocookie.net/empiresandpuzzles/images/d/dc/Thalassa.jpg/revision/latest?cb=20230620025555",
             "specialName": "Ocean’s Embrace"
           }
+        },
+        {
+          "position": 3,
+          "heroId": null,
+          "heroData": {
+            "name": "Azlar",
+            "element": "fire",
+            "rarity": "5",
+            "heroClass": "Bárbaro",
+            "manaSpeed": "Lento",
+            "family": "Classic",
+            "imagePath": "https://static.wikia.nocookie.net/empiresandpuzzles/images/0/0f/Azlar.jpg/revision/latest?cb=20180509004520",
+            "specialName": "Volcanic Eruption"
+          }
         }
       ],
-      "updatedAt": "2026-05-02T01:06:33.867Z"
+      "updatedAt": "2026-05-02T01:08:34.620Z"
     }
   ]
 }
