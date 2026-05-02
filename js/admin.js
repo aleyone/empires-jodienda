@@ -146,7 +146,7 @@ document.getElementById('user-form').addEventListener('submit', async (e) => {
   const password = document.getElementById('u-password').value;
 
   if (!username) return showFieldError('err-u-username', 'El nombre de usuario es obligatorio');
-  if (!/^[a-z0-9_]+$/.test(username)) return showFieldError('err-u-username', 'Solo letras, números y guion bajo');
+  if (!username) return showFieldError('err-u-username', 'El nombre no puede estar vacío');
   if (isNewUser && password.length < 6) return showFieldError('err-u-password', 'Mínimo 6 caracteres');
 
   try {
