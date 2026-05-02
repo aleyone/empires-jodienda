@@ -1013,3 +1013,51 @@ select.form-control option {
 @media (min-width: 768px) {
   .toolbar { flex-direction: row; align-items: center; flex-wrap: wrap; }
 }
+
+/* ============================================================
+   MOBILE — evitar scroll lateral y adaptar navbar
+   ============================================================ */
+@media (max-width: 600px) {
+  /* Evitar scroll lateral */
+  html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  .page-wrapper {
+    overflow-x: hidden;
+  }
+
+  /* Navbar en móvil — ocultar texto secundario */
+  .navbar-brand-ep,
+  .navbar-brand-sep,
+  .navbar-brand-version {
+    display: none !important;
+  }
+
+  /* Botón Alianza — solo icono en móvil */
+  .btn-alianza-text {
+    display: none;
+  }
+
+  /* Reducir gap en navbar-actions */
+  .navbar-actions {
+    gap: 0.3rem;
+  }
+
+  /* Modales — ancho completo en móvil */
+  #modal-changelog > div,
+  #modal-wiki > div,
+  #modal-wiki-aviso > div,
+  #modal-wiki-compare > div,
+  #modal-add-hero > div {
+    max-width: calc(100vw - 2rem) !important;
+    margin: 0.5rem auto !important;
+  }
+
+  /* Botones pequeños en móvil */
+  .btn-sm {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.78rem;
+  }
+}
