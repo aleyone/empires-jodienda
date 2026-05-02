@@ -66,6 +66,26 @@
         }
       ],
       "updatedAt": "2026-05-02T00:35:12.708Z"
+    },
+    {
+      "username": "adrian",
+      "heroes": [
+        {
+          "position": 1,
+          "heroId": null,
+          "heroData": {
+            "name": "Thalassa",
+            "element": "ice",
+            "rarity": "5",
+            "heroClass": "Clérigo",
+            "manaSpeed": "Changing Tides",
+            "family": "doa",
+            "imagePath": "https://static.wikia.nocookie.net/empiresandpuzzles/images/d/dc/Thalassa.jpg/revision/latest?cb=20230620025555",
+            "specialName": "Ocean’s Embrace"
+          }
+        }
+      ],
+      "updatedAt": "2026-05-02T01:06:33.867Z"
     }
   ]
 }
