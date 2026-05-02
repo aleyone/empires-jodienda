@@ -154,7 +154,7 @@
     e.preventDefault();
     clearErrors();
 
-    const newUsername = document.getElementById('p-username').value.trim().toLowerCase();
+    const newUsername = document.getElementById('p-username').value.trim();
     const newEmail    = document.getElementById('p-email').value.trim();
 
     if (!newUsername) return showErr('err-p-username', 'El nombre no puede estar vacío');
