@@ -49,9 +49,23 @@
           "position": 4,
           "heroId": "d36c8eedff9b",
           "heroData": null
+        },
+        {
+          "position": 5,
+          "heroId": null,
+          "heroData": {
+            "name": "gandr",
+            "element": "holy",
+            "rarity": "5",
+            "heroClass": "Ranger",
+            "manaSpeed": "Lento",
+            "family": "Nidavellir",
+            "imagePath": "https://static.wikia.nocookie.net/empiresandpuzzles/images/8/8a/Gandr.jpg/revision/latest?cb=20241214140747",
+            "specialName": "Spearwand Gale"
+          }
         }
       ],
-      "updatedAt": "2026-05-02T00:34:53.777Z"
+      "updatedAt": "2026-05-02T00:35:12.708Z"
     }
   ]
 }
