@@ -2,6 +2,10 @@
   "version": 2,
   "rewrites": [
     {
+      "source": "/api/register",
+      "destination": "/api/register"
+    },
+    {
       "source": "/api/teams",
       "destination": "/api/teams"
     },
