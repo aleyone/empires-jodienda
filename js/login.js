@@ -71,6 +71,9 @@ document.getElementById('first-login-form').addEventListener('submit', async (e)
   const confirm = document.getElementById('fl-confirm').value;
   const pending = JSON.parse(sessionStorage.getItem('mk_pending_user') || 'null');
 
+  const privacy = document.getElementById('fl-privacy')?.checked;
+  if (!privacy) return showFieldError('err-fl-privacy', 'Debes aceptar el aviso de privacidad para continuar');
+
   if (!email)   return showFieldError('err-fl-email', 'El email es obligatorio');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
                 return showFieldError('err-fl-email', 'Email no válido');
