@@ -179,7 +179,8 @@
       const newAllianceName = document.getElementById('p-alliance-name').value.trim();
       const warParticipant = document.getElementById('p-war').checked;
       Auth.setSession({ ...session, username: newUsername, email: newEmail, allianceName: newAllianceName, warParticipant });
-      document.getElementById('profile-avatar').textContent = newUsername.charAt(0).toUpperCase();
+      const fl = (newUsername.match(/[a-zA-ZáéíóúÁÉÍÓÚñÑ]/) || ['?'])[0];
+      document.getElementById('profile-avatar').textContent = fl.toUpperCase();
       document.getElementById('profile-name').textContent   = newUsername;
       document.getElementById('profile-email').textContent  = newEmail || 'Sin email registrado';
       showToast('Datos actualizados correctamente', 'success');
