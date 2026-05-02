@@ -1,6 +1,19 @@
 {
-  "currentVersion": "2.0",
+  "currentVersion": "2.1",
   "versions": [
+    {
+      "version": "2.1",
+      "date": "2026-05-03",
+      "title": "Mejoras de usuario y acceso",
+      "changes": [
+        "Aviso de privacidad con confirmación obligatoria en el primer acceso",
+        "Campo 'Participa en guerra de alianza' en el perfil de usuario",
+        "Participación en guerra visible en la vista de la alianza",
+        "Los admins pueden eliminar usuarios desde el panel de gestión",
+        "Nombres de usuario con caracteres especiales soportados correctamente",
+        "Avatar muestra la primera letra del nombre ignorando caracteres especiales"
+      ]
+    },
     {
       "version": "2.0",
       "date": "2026-05-02",
