@@ -51,11 +51,12 @@ module.exports = async (req, res) => {
       case 'GET': {
         const { users } = await readUsers();
         const safe = users.map(u => ({
-          username:   u.username,
-          email:      u.email || '',
-          role:       u.role,
-          firstLogin: u.firstLogin || false,
-          createdAt:  u.createdAt
+          username:     u.username,
+          email:        u.email || '',
+          role:         u.role,
+          firstLogin:   u.firstLogin || false,
+          createdAt:    u.createdAt,
+          allianceName: u.allianceName || ''
         }));
         return res.status(200).json({ users: safe });
       }
@@ -98,6 +99,7 @@ module.exports = async (req, res) => {
           users[idx].username = newName.toLowerCase();
         }
         if (email !== undefined) users[idx].email = email;
+        if (req.body.allianceName !== undefined) users[idx].allianceName = req.body.allianceName;
         if (role) users[idx].role = role;
         await writeUsers(users, sha, `update user: ${username}`);
         return res.status(200).json({ ok: true });

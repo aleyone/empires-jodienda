@@ -38,7 +38,8 @@ module.exports = async (req, res) => {
       username:        user.username,
       role:            user.role,
       email:           user.email || '',
-      lastSeenVersion: user.lastSeenVersion || null
+      lastSeenVersion: user.lastSeenVersion || null,
+      allianceName:    user.allianceName || ''
     };
 
     if (user.firstLogin) {
