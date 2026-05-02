@@ -17,12 +17,13 @@ module.exports = async (req, res) => {
 
   try {
     const { users } = await readUsers();
-    const input = usernameOrEmail.toLowerCase().trim();
+    const input = usernameOrEmail.trim();
+    const inputLower = input.toLowerCase();
 
-    /* Buscar por username O por email */
+    /* Buscar por username (case-insensitive) O por email */
     const user = users.find(u =>
-      u.username === input ||
-      (u.email && u.email.toLowerCase() === input)
+      u.username.toLowerCase() === inputLower ||
+      (u.email && u.email.toLowerCase() === inputLower)
     );
 
     if (!user) {
