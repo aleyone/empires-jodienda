@@ -29,7 +29,8 @@ const Auth = (() => {
       username:        user.username,
       role:            user.role,
       email:           user.email || '',
-      lastSeenVersion: user.lastSeenVersion || null
+      lastSeenVersion: user.lastSeenVersion || null,
+      allianceName:    user.allianceName || ''
     });
     sessionStorage.setItem(SESSION_KEY, data);
     localStorage.setItem(SESSION_KEY, data);

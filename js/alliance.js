@@ -14,15 +14,18 @@ const RARITY_STARS  = { '1':'⭐','2':'⭐⭐','3':'⭐⭐⭐','4':'⭐⭐⭐⭐
 
 async function loadAlliance() {
   try {
-    /* Cargar equipos y héroes del bestiario en paralelo */
-    const [teamsRes, heroesRes] = await Promise.all([
+    /* Cargar equipos, héroes del bestiario y usuarios en paralelo */
+    const [teamsRes, heroesRes, usersRes] = await Promise.all([
       fetch('/api/teams', { headers: { 'x-username': Auth.getUsername() } }),
-      fetch('/api/heroes')
+      fetch('/api/heroes'),
+      fetch('/api/users',  { headers: { 'x-username': Auth.getUsername() } })
     ]);
 
     const teamsData  = await teamsRes.json();
     const heroesData = await heroesRes.json();
+    const usersData  = await usersRes.json();
     const bestiario  = heroesData.heroes || [];
+    const users      = usersData.users   || [];
 
     document.getElementById('alliance-loading').style.display = 'none';
     const grid = document.getElementById('alliance-grid');
@@ -34,7 +37,7 @@ async function loadAlliance() {
       return;
     }
 
-    grid.innerHTML = teams.map(team => renderMemberCard(team, bestiario)).join('');
+    grid.innerHTML = teams.map(team => renderMemberCard(team, bestiario, users)).join('');
 
   } catch (err) {
     console.error(err);
@@ -42,8 +45,10 @@ async function loadAlliance() {
   }
 }
 
-function renderMemberCard(team, bestiario) {
-  const initial = team.username.charAt(0).toUpperCase();
+function renderMemberCard(team, bestiario, users = []) {
+  const user        = users.find(u => u.username === team.username);
+  const displayName = user?.allianceName || team.username;
+  const initial     = displayName.charAt(0).toUpperCase();
   const slots   = [1,2,3,4,5].map(pos => {
     const slot = team.heroes.find(h => h.position === pos);
     if (!slot) return `<div style="width:56px;height:70px;background:var(--bg-surface);border:1px dashed var(--border-subtle);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:1.2rem;">+</div>`;
@@ -71,7 +76,8 @@ function renderMemberCard(team, bestiario) {
       <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
         <div class="user-avatar" style="width:40px;height:40px;font-size:1rem;">${initial}</div>
         <div>
-          <div style="font-family:'Cinzel',serif;font-weight:700;font-size:0.95rem;color:var(--text-primary);">${team.username}</div>
+          <div style="font-family:'Cinzel',serif;font-weight:700;font-size:0.95rem;color:var(--text-primary);">${displayName}</div>
+          ${user?.allianceName ? `<div style="font-size:0.72rem;color:var(--text-muted);">${team.username}</div>` : ''}
           ${team.updatedAt ? `<div style="font-size:0.72rem;color:var(--text-muted);">Actualizado ${formatDate(team.updatedAt)}</div>` : ''}
         </div>
         ${Auth.isAdmin() ? `<a href="my-team.html?user=${team.username}" class="btn btn-ghost btn-sm" style="margin-left:auto;">Editar</a>` : ''}
