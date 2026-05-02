@@ -1,3 +1,24 @@
 {
-  "teams": []
+  "teams": [
+    {
+      "username": "david",
+      "heroes": [
+        {
+          "position": 1,
+          "heroId": null,
+          "heroData": {
+            "name": "gardered",
+            "element": "fire",
+            "rarity": "5",
+            "heroClass": "Guerrero",
+            "manaSpeed": "Promedio",
+            "family": "mth",
+            "imagePath": "https://static.wikia.nocookie.net/empiresandpuzzles/images/b/b3/Gardered_%28The_Daremoth%29.jpg/revision/latest?cb=20251024191651",
+            "specialName": "Triple Stab"
+          }
+        }
+      ],
+      "updatedAt": "2026-05-02T00:33:58.567Z"
+    }
+  ]
 }
