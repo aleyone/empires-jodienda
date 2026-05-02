@@ -66,7 +66,7 @@ module.exports = async (req, res) => {
 
   try {
     const { users } = await readUsers();
-    const caller    = users.find(u => u.username === callerUsername);
+    const caller    = users.find(u => u.username.toLowerCase() === (callerUsername||'').toLowerCase());
 
     switch (req.method) {
 
