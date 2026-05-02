@@ -1,6 +1,20 @@
 {
-  "currentVersion": "1.6",
+  "currentVersion": "1.7",
   "versions": [
+    {
+      "version": "1.7",
+      "date": "2026-05-02",
+      "title": "Galería, Cloudinary y Novedades",
+      "changes": [
+        "Imágenes de héroes migradas a Cloudinary para mayor velocidad y fiabilidad",
+        "Galería de imágenes adicionales en la ficha del héroe",
+        "Subida de múltiples imágenes por héroe (capturas, builds, comparativas...)",
+        "Sistema de versiones y changelog con modal de novedades al entrar en la app",
+        "Versión de la app visible en el navbar y en el login",
+        "Página de historial completo de versiones",
+        "Página de gestión de notificaciones con estado por héroe"
+      ]
+    },
     {
       "version": "1.6",
       "date": "2026-05-01",
