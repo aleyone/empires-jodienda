@@ -44,9 +44,14 @@
             "imagePath": "https://static.wikia.nocookie.net/empiresandpuzzles/images/e/eb/Odile.jpg/revision/latest?cb=20240328003344",
             "specialName": "Dance of the Black Swan"
           }
+        },
+        {
+          "position": 4,
+          "heroId": "d36c8eedff9b",
+          "heroData": null
         }
       ],
-      "updatedAt": "2026-05-02T00:34:39.908Z"
+      "updatedAt": "2026-05-02T00:34:53.777Z"
     }
   ]
 }
