@@ -122,10 +122,13 @@
       "imagePath": "https://res.cloudinary.com/dav2tz0w7/image/upload/v1777679018/mini-kripta/heroes/mini-kripta/heroes/93336fbbebe4.webp",
       "createdBy": "david",
       "createdAt": "2026-05-01T15:03:35.046Z",
-      "updatedAt": "2026-05-01T22:42:13.449Z",
+      "updatedAt": "2026-05-02T00:03:38.684Z",
       "updatedBy": "david",
       "wikiCheckedAt": "2026-05-01T22:42:13.090Z",
-      "wikiHasUpdates": false
+      "wikiHasUpdates": false,
+      "additionalImages": [
+        "https://res.cloudinary.com/dav2tz0w7/image/upload/v1777680212/mini-kripta/heroes/mini-kripta/heroes/additional-1777680212190-9vpjwbfrhj9.jpg"
+      ]
     },
     {
       "id": "0fbad6b6b7c3",
