@@ -41,8 +41,17 @@ module.exports = async (req, res) => {
       return handleResetPasswordToken(req, res);
     }
 
-    /* ---- CRUD usuarios (solo admin) ---- */
-    if (!(await checkRole(req, 'admin'))) {
+    /* ---- CRUD usuarios ---- */
+    /* PUT: admin puede editar cualquiera, usuario puede editar su propio perfil */
+    const callerUsernameCheck = req.headers['x-username'];
+    const targetUsernameCheck = req.query.username;
+    const isAdmin = await checkRole(req, 'admin');
+    const isOwnProfile = callerUsernameCheck && targetUsernameCheck &&
+      callerUsernameCheck.toLowerCase() === targetUsernameCheck.toLowerCase();
+
+    if (req.method === 'PUT' && isOwnProfile) {
+      /* Permitir — el usuario edita su propio perfil */
+    } else if (!isAdmin) {
       return res.status(403).json({ error: 'Sin permisos de administrador' });
     }
 
@@ -93,11 +102,13 @@ module.exports = async (req, res) => {
         const { users, sha } = await readUsers();
         const idx = users.findIndex(u => u.username === username);
         if (idx === -1) return res.status(404).json({ error: 'Usuario no encontrado' });
-        if (newName && newName !== username) {
-          if (users.find(u => u.username === newName.toLowerCase())) {
+        if (newName && newName !== users[idx].username) {
+          /* Comprobar duplicado case-insensitive pero excluyendo el propio usuario */
+          const duplicate = users.find((u, i) => i !== idx && u.username.toLowerCase() === newName.toLowerCase());
+          if (duplicate) {
             return res.status(409).json({ error: 'El nombre ya está en uso' });
           }
-          users[idx].username = newName.toLowerCase();
+          users[idx].username = newName; /* Guardar respetando mayúsculas */
         }
         if (email !== undefined) users[idx].email = email;
         if (req.body.allianceName !== undefined) users[idx].allianceName = req.body.allianceName;
