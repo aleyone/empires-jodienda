@@ -95,14 +95,20 @@ function openSlot(pos) {
   document.getElementById('team-img-preview').style.display = 'none';
   document.getElementById('team-img-placeholder').style.display = 'flex';
   document.getElementById('modal-position-label').textContent = pos;
+  document.getElementById('team-save-hero-btn').disabled = true;
   document.getElementById('modal-add-hero').style.display = 'block';
 }
 
-/* ---- BÚSQUEDA AL SALIR DEL INPUT ---- */
-document.getElementById('team-hero-name').addEventListener('blur', async () => {
+/* ---- BÚSQUEDA AL PULSAR BOTÓN ---- */
+async function searchHero() {
   const name   = document.getElementById('team-hero-name').value.trim();
   const status = document.getElementById('team-wiki-status');
-  if (!name || name.length < 2) return;
+  if (!name || name.length < 2) {
+    status.style.display = 'block';
+    status.style.color   = 'var(--text-muted)';
+    status.textContent   = 'Escribe al menos 2 caracteres';
+    return;
+  }
 
   /* 1. Buscar en bestiario */
   const found = bestiario.find(h => h.name.toLowerCase() === name.toLowerCase());
@@ -113,6 +119,7 @@ document.getElementById('team-hero-name').addEventListener('blur', async () => {
     status.style.color   = '#70d470';
     status.textContent   = '✓ Encontrado en el bestiario';
     document.getElementById('team-manual-fields').style.display = 'none';
+    document.getElementById('team-save-hero-btn').disabled = false;
     return;
   }
 
@@ -139,6 +146,7 @@ document.getElementById('team-hero-name').addEventListener('blur', async () => {
     status.style.color  = '#70d470';
     status.textContent  = '✓ Datos importados desde la wiki';
     document.getElementById('team-manual-fields').style.display = 'none';
+    document.getElementById('team-save-hero-btn').disabled = false;
 
   } catch {
     status.style.color  = 'var(--text-muted)';
@@ -146,6 +154,12 @@ document.getElementById('team-hero-name').addEventListener('blur', async () => {
     teamHeroData        = { name };
     document.getElementById('team-manual-fields').style.display = 'block';
   }
+}
+
+/* Botón buscar y Enter en el input */
+document.getElementById('team-search-btn').addEventListener('click', searchHero);
+document.getElementById('team-hero-name').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); searchHero(); }
 });
 
 function showTeamHeroPreview(data) {
@@ -193,6 +207,7 @@ document.getElementById('team-img-input').addEventListener('change', async (e) =
 document.getElementById('team-save-hero-btn').addEventListener('click', async () => {
   const name = document.getElementById('team-hero-name').value.trim();
   if (!name) return showToast('Escribe el nombre del héroe', 'info');
+  if (!teamHeroData) return showToast('Busca primero el héroe', 'info');
 
   const btn = document.getElementById('team-save-hero-btn');
   btn.disabled    = true;
