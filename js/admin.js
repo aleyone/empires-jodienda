@@ -31,7 +31,7 @@ function renderUsers() {
     <tr style="border-bottom:1px solid var(--border-subtle);">
       <td style="padding:0.75rem;font-weight:600;font-size:0.9rem;">
         <div style="display:flex;align-items:center;gap:0.5rem;">
-          <div class="user-avatar" style="width:28px;height:28px;font-size:0.7rem;">${u.username.charAt(0).toUpperCase()}</div>
+          <div class="user-avatar" style="width:28px;height:28px;font-size:0.7rem;">${(u.username.match(/[a-zA-ZáéíóúÁÉÍÓÚñÑ]/) || ['?'])[0].toUpperCase()}</div>
           ${u.username}
         </div>
       </td>
@@ -140,7 +140,7 @@ document.getElementById('user-form').addEventListener('submit', async (e) => {
   const originalUsername = document.getElementById('edit-username-original').value;
   const isNewUser = !originalUsername;
 
-  const username = document.getElementById('u-username').value.trim().toLowerCase();
+  const username = document.getElementById('u-username').value.trim();
   const email    = document.getElementById('u-email').value.trim();
   const role     = document.getElementById('u-role').value;
   const password = document.getElementById('u-password').value;
