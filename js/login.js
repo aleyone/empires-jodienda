@@ -150,3 +150,84 @@ function clearErrors() {
   const ge = document.getElementById('login-error');
   if (ge) ge.style.display = 'none';
 }
+
+/* ============================================================
+   REGISTRO DE NUEVO USUARIO
+   ============================================================ */
+
+document.getElementById('register-link').addEventListener('click', (e) => {
+  e.preventDefault();
+  document.getElementById('modal-register').style.display = 'flex';
+});
+
+document.getElementById('close-register').addEventListener('click', () => {
+  document.getElementById('modal-register').style.display = 'none';
+});
+
+document.getElementById('register-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  /* Limpiar errores */
+  ['reg-username','reg-email','reg-password','reg-confirm','reg-code','reg-privacy'].forEach(id => {
+    const el = document.getElementById(`err-${id}`);
+    if (el) { el.textContent = ''; el.classList.remove('visible'); }
+  });
+
+  const username = document.getElementById('reg-username').value.trim();
+  const email    = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const confirm  = document.getElementById('reg-confirm').value;
+  const code     = document.getElementById('reg-code').value.trim();
+  const privacy  = document.getElementById('reg-privacy').checked;
+
+  /* Validaciones frontend */
+  if (!username || username.length < 2)
+    return showFieldError('err-reg-username', 'El nombre es obligatorio (mínimo 2 caracteres)');
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+    return showFieldError('err-reg-email', 'Email no válido');
+  if (!password || password.length < 6)
+    return showFieldError('err-reg-password', 'Mínimo 6 caracteres');
+  if (password !== confirm)
+    return showFieldError('err-reg-confirm', 'Las contraseñas no coinciden');
+  if (!code)
+    return showFieldError('err-reg-code', 'El código de alianza es obligatorio');
+  if (!privacy)
+    return showFieldError('err-reg-privacy', 'Debes aceptar el aviso de privacidad');
+
+  const btn = e.target.querySelector('[type="submit"]');
+  btn.disabled    = true;
+  btn.textContent = 'Creando cuenta...';
+
+  try {
+    const res = await fetch('/api/register', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ username, email, password, allianceCode: code })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      /* Mostrar error en el campo correspondiente */
+      if (data.error.includes('usuario'))  return showFieldError('err-reg-username', data.error);
+      if (data.error.includes('email'))    return showFieldError('err-reg-email', data.error);
+      if (data.error.includes('contraseña')) return showFieldError('err-reg-password', data.error);
+      if (data.error.includes('Código'))   return showFieldError('err-reg-code', data.error);
+      return showFieldError('err-reg-code', data.error);
+    }
+
+    /* Éxito */
+    document.getElementById('modal-register').style.display = 'none';
+    document.getElementById('register-form').reset();
+
+    /* Rellenar login con el username para facilitar el acceso */
+    document.getElementById('username').value = username;
+    alert(`¡Cuenta creada! Ya puedes entrar con tu usuario "${username}" y tu contraseña.`);
+
+  } catch {
+    showFieldError('err-reg-code', 'Error de conexión. Inténtalo de nuevo.');
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = 'Crear cuenta';
+  }
+});
