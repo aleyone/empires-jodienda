@@ -199,7 +199,7 @@ document.getElementById('register-form').addEventListener('submit', async (e) =>
   btn.textContent = 'Creando cuenta...';
 
   try {
-    const res = await fetch('/api/register', {
+    const res = await fetch('/api/users/register', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ username, email, password, allianceCode: code })
