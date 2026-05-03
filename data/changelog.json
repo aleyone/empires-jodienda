@@ -1,6 +1,19 @@
 {
-  "currentVersion": "2.1",
+  "currentVersion": "2.2",
   "versions": [
+    {
+      "version": "2.2",
+      "date": "2026-05-03",
+      "title": "Registro y acceso de invitados",
+      "changes": [
+        "Registro de nuevos usuarios con código de alianza desde la pantalla de login",
+        "Aviso de privacidad incluido en el formulario de registro",
+        "Acceso como invitado — permite ver el bestiario y la alianza sin cuenta",
+        "Los invitados no pueden editar, valorar ni comentar",
+        "Mejoras de visualización en dispositivos móviles",
+        "Corrección de nombres de usuario con caracteres especiales"
+      ]
+    },
     {
       "version": "2.1",
       "date": "2026-05-03",
