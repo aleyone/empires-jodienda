@@ -7,9 +7,7 @@
       "role": "admin",
       "firstLogin": false,
       "createdAt": "2025-01-01T00:00:00.000Z",
-      "lastSeenVersion": "2.3",
-      "allianceName": "_^Dune^_",
-      "warParticipant": true
+      "lastSeenVersion": "1.7"
     },
     {
       "username": "KSanya",
@@ -17,8 +15,7 @@
       "email": "adrianksanya@gmail.com",
       "role": "admin",
       "firstLogin": false,
-      "createdAt": "2025-01-01T00:00:00.000Z",
-      "lastSeenVersion": "2.3"
+      "createdAt": "2025-01-01T00:00:00.000Z"
     },
     {
       "username": "Leeroux",
@@ -42,9 +39,7 @@
       "email": "christiangilperez@gmail.com",
       "role": "consultant",
       "firstLogin": false,
-      "createdAt": "2026-04-30T10:54:20.658Z",
-      "resetToken": null,
-      "resetTokenAt": null
+      "createdAt": "2026-04-30T10:54:20.658Z"
     },
     {
       "username": "SirCrisis",
@@ -141,22 +136,6 @@
       "role": "editor",
       "firstLogin": true,
       "createdAt": "2026-05-02T00:00:00.000Z"
-    },
-    {
-      "username": "TestPrivacy",
-      "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
-      "email": "",
-      "role": "editor",
-      "firstLogin": true,
-      "createdAt": "2026-05-02T00:00:00.000Z"
-    },
-    {
-      "username": "test1",
-      "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
-      "email": "prueba@prueba.com",
-      "role": "consultant",
-      "firstLogin": false,
-      "createdAt": "2026-05-03T10:20:09.797Z"
     }
   ]
 }
