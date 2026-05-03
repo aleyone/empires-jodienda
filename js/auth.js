@@ -92,7 +92,12 @@ const Auth = (() => {
   function isEditor()    { return getRole() === 'editor' || isAdmin(); }
   function canEdit()     { return isEditor(); }
 
-  function requireAuth() {
+  function requireAuth(allowGuest = false) {
+    if (isGuest() && allowGuest) return true;
+    if (isGuest() && !allowGuest) {
+      window.location.href = 'login.html';
+      return false;
+    }
     if (!isLoggedIn()) {
       const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
       window.location.href = `login.html?returnUrl=${returnUrl}`;
