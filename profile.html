@@ -246,5 +246,11 @@
     });
   }
 </script>
+<script src="js/chat.js"></script>
+<script>
+  window.addEventListener('load', () => {
+    if (typeof Auth !== 'undefined') Chat.init();
+  });
+</script>
 </body>
 </html>
