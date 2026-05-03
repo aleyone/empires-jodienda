@@ -131,7 +131,7 @@ module.exports = async (req, res) => {
         if (!username) return res.status(400).json({ error: 'username requerido' });
         const { username: newName, email, role } = req.body || {};
         const { users, sha } = await readUsers();
-        const idx = users.findIndex(u => u.username === username);
+        const idx = users.findIndex(u => u.username.toLowerCase() === (username||'').toLowerCase());
         if (idx === -1) return res.status(404).json({ error: 'Usuario no encontrado' });
         if (newName && newName !== users[idx].username) {
           /* Comprobar duplicado case-insensitive pero excluyendo el propio usuario */
@@ -188,14 +188,14 @@ async function handleFirstLogin(req, res) {
     return res.status(400).json({ error: 'Contraseña demasiado corta' });
   }
   const { users, sha } = await readUsers();
-  const idx = users.findIndex(u => u.username === username.toLowerCase());
+  const idx = users.findIndex(u => u.username.toLowerCase() === username.toLowerCase());
   if (idx === -1) return res.status(404).json({ error: 'Usuario no encontrado' });
 
   users[idx].email        = email;
   users[idx].passwordHash = await hashPassword(newPassword);
   users[idx].firstLogin   = false;
 
-  await writeUsers(users, sha, `first login: ${username}`);
+  await writeUsers(users, sha, `first login: ${users[idx].username}`);
   return res.status(200).json({ ok: true });
 }
 
@@ -295,7 +295,7 @@ async function handleResetPasswordToken(req, res) {
   }
 
   const { users, sha } = await readUsers();
-  const idx = users.findIndex(u => u.username === username.toLowerCase());
+  const idx = users.findIndex(u => u.username.toLowerCase() === (username||'').toLowerCase());
   if (idx === -1) return res.status(404).json({ error: 'Usuario no encontrado' });
 
   const user = users[idx];
