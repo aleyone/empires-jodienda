@@ -1,6 +1,19 @@
 {
-  "currentVersion": "2.2",
+  "currentVersion": "2.3",
   "versions": [
+    {
+      "version": "2.3",
+      "date": "2026-05-03",
+      "title": "Chat de la Alianza",
+      "changes": [
+        "Chat en tiempo real para todos los miembros de la alianza",
+        "Botón flotante 💬 disponible en todas las páginas",
+        "Los mensajes se sincronizan al instante entre todos los usuarios conectados",
+        "Badge con mensajes no leídos cuando el chat está cerrado",
+        "Los invitados pueden ver el chat pero no escribir",
+        "Soporte completo de emojis"
+      ]
+    },
     {
       "version": "2.2",
       "date": "2026-05-03",
