@@ -72,6 +72,19 @@ const Auth = (() => {
   window.addEventListener('beforeunload', _unregisterTab);
 
   /* ---- API pública ---- */
+  /* ---- Sesión de invitado ---- */
+  function setGuestSession() {
+    sessionStorage.setItem('mk_guest', '1');
+  }
+
+  function isGuest() {
+    return sessionStorage.getItem('mk_guest') === '1';
+  }
+
+  function clearGuestSession() {
+    sessionStorage.removeItem('mk_guest');
+  }
+
   function isLoggedIn() { return !!getSession(); }
   function getRole()     { return getSession()?.role || null; }
   function getUsername() { return getSession()?.username || null; }
@@ -102,6 +115,27 @@ const Auth = (() => {
   }
 
   function initNavbar() {
+    if (isGuest()) {
+      /* Navbar mínimo para invitados */
+      const navAvatar   = document.getElementById('nav-avatar');
+      const navUsername = document.getElementById('nav-username');
+      const navMenuBtn  = document.getElementById('nav-menu-btn');
+      const btnAdd      = document.getElementById('btn-add-hero');
+      const notifWrap   = document.getElementById('notif-wrap');
+      if (navAvatar)   navAvatar.textContent   = '👁';
+      if (navUsername) navUsername.textContent  = 'Invitado';
+      if (btnAdd)      btnAdd.style.display     = 'none';
+      if (notifWrap)   notifWrap.style.display  = 'none';
+      if (navMenuBtn) {
+        navMenuBtn.addEventListener('click', () => {
+          sessionStorage.removeItem('mk_guest');
+          window.location.href = 'login.html';
+        });
+        /* Cambiar contenido del botón */
+        navMenuBtn.innerHTML = '<span style="font-size:0.82rem;">👁 Invitado · Salir</span>';
+      }
+      return;
+    }
     const session = getSession();
     if (!session) return;
 
@@ -175,7 +209,7 @@ const Auth = (() => {
 
   return {
     getSession, setSession, clearSession,
-    isLoggedIn, getRole, getUsername,
+    isLoggedIn, getRole, getUsername, isGuest, setGuestSession, clearGuestSession,
     isAdmin, isEditor, canEdit,
     requireAuth, requireAdmin, requireEditor,
     initNavbar

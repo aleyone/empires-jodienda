@@ -231,3 +231,9 @@ document.getElementById('register-form').addEventListener('submit', async (e) =>
     btn.textContent = 'Crear cuenta';
   }
 });
+
+/* ---- ACCESO COMO INVITADO ---- */
+document.getElementById('guest-btn').addEventListener('click', () => {
+  Auth.setGuestSession();
+  window.location.href = 'index.html';
+});

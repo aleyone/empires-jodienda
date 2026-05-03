@@ -2,7 +2,7 @@
    index.js — Página principal: listado, filtros, búsqueda
    ============================================================ */
 
-Auth.requireAuth();
+Auth.requireAuth(true);
 Auth.initNavbar();
 
 let allHeroes = [];

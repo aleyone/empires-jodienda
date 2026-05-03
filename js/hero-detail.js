@@ -2,8 +2,18 @@
    hero-detail.js — Página de detalle de héroe
    ============================================================ */
 
-Auth.requireAuth();
+Auth.requireAuth(true);
 Auth.initNavbar();
+
+/* Si es invitado, ocultar todas las acciones de edición */
+if (Auth.isGuest()) {
+  document.addEventListener('DOMContentLoaded', () => {
+    ['edit-actions','btn-edit','btn-delete','comment-form'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+  });
+}
 
 const params = new URLSearchParams(window.location.search);
 const heroId = params.get('id');

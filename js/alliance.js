@@ -1,6 +1,6 @@
 /* alliance.js — Vista pública de la alianza */
 
-Auth.requireAuth();
+Auth.requireAuth(true);
 Auth.initNavbar();
 
 /* Mostrar "Mi equipo" en menú si es editor/admin */
