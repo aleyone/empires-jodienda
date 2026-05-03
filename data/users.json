@@ -84,10 +84,10 @@
     },
     {
       "username": "ChantaKloss",
-      "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
-      "email": "",
+      "passwordHash": "43fae6c11d7632acc6059de1cced9b09a58caaa878071308ad67f32ef6b11691",
+      "email": "chantakloss@gmail.com",
       "role": "editor",
-      "firstLogin": true,
+      "firstLogin": false,
       "createdAt": "2026-05-02T00:00:00.000Z"
     },
     {
