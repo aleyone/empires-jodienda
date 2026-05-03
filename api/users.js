@@ -22,6 +22,37 @@ module.exports = async (req, res) => {
 
   try {
 
+    /* ---- Ruta de registro público ---- */
+    if (url.endsWith('/register')) {
+      const { username, email, password, allianceCode } = req.body || {};
+
+      if (!username || username.trim().length < 2)
+        return res.status(400).json({ error: 'El nombre de usuario es obligatorio (mínimo 2 caracteres)' });
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+        return res.status(400).json({ error: 'Email no válido' });
+      if (!password || password.length < 6)
+        return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+      if (!allianceCode || allianceCode.trim() !== process.env.ALLIANCE_CODE)
+        return res.status(401).json({ error: 'Código de alianza incorrecto' });
+
+      const { users, sha } = await readUsers();
+      const exists = users.find(u => u.username.toLowerCase() === username.trim().toLowerCase());
+      if (exists) return res.status(409).json({ error: 'Ese nombre de usuario ya está en uso' });
+      const emailExists = users.find(u => u.email && u.email.toLowerCase() === email.trim().toLowerCase());
+      if (emailExists) return res.status(409).json({ error: 'Ese email ya está registrado' });
+
+      users.push({
+        username:     username.trim(),
+        passwordHash: hashPassword(password),
+        email:        email.trim().toLowerCase(),
+        role:         'editor',
+        firstLogin:   false,
+        createdAt:    new Date().toISOString()
+      });
+      await writeUsers(users, sha, `register user: ${username.trim()}`);
+      return res.status(201).json({ ok: true });
+    }
+
     /* ---- Rutas especiales (no requieren admin) ---- */
     if (url.endsWith('/first-login')) {
       return handleFirstLogin(req, res);
