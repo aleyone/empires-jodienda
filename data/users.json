@@ -23,7 +23,7 @@
       "username": "Leeroux",
       "passwordHash": "0a4651ad5b395eaee21054f27ba5b793b6dc8388dbfa396461f394afef85534f",
       "email": "raywellss1@gmail.com",
-      "role": "editor",
+      "role": "admin",
       "firstLogin": false,
       "createdAt": "2025-01-01T00:00:00.000Z",
       "lastSeenVersion": "2.3"
