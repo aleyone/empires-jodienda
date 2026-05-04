@@ -1,0 +1,66 @@
+{
+  "wars": [
+    {
+      "id": "war-2026-05-02",
+      "startDate": "2026-05-02",
+      "endDate": "2026-05-03",
+      "type": "Horda Zombi",
+      "result": {
+        "ourScore": 4201,
+        "enemyScore": 5161,
+        "enemyName": "FC Spartak (Moscow)",
+        "won": false
+      },
+      "participants": [
+        {
+          "username": "el*negro666",
+          "points": 584
+        },
+        {
+          "username": "_^Dune^_",
+          "points": 526
+        },
+        {
+          "username": "Chris",
+          "points": 493
+        },
+        {
+          "username": "KSanya",
+          "points": 414
+        },
+        {
+          "username": "SirCrisis",
+          "points": 390
+        },
+        {
+          "username": "DarkAngel",
+          "points": 378
+        },
+        {
+          "username": "Pedro",
+          "points": 361
+        },
+        {
+          "username": "Leeroux",
+          "points": 356
+        },
+        {
+          "username": "DonDa",
+          "points": 291
+        },
+        {
+          "username": "Danna",
+          "points": 285
+        },
+        {
+          "username": "HaroldSam",
+          "points": 114
+        },
+        {
+          "username": "R.E.N.N.2017",
+          "points": 9
+        }
+      ]
+    }
+  ]
+}
