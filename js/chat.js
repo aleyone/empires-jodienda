@@ -126,6 +126,12 @@ const Chat = (() => {
     }
 
     container.innerHTML = messages.map(msg => {
+      /* Mensaje de sistema */
+      if (msg.system) {
+        return `<div style="text-align:center;padding:0.4rem 1rem;">
+          <span style="font-size:0.75rem;color:var(--gold);background:rgba(201,149,42,0.1);border:1px solid rgba(201,149,42,0.2);border-radius:10px;padding:0.25rem 0.75rem;">${escapeHtml(msg.text)}</span>
+        </div>`;
+      }
       const isOwn = msg.username === username;
       const time  = new Date(msg.timestamp).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
       const date  = new Date(msg.timestamp).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });

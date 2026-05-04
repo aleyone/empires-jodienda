@@ -86,7 +86,12 @@ document.getElementById('first-login-form').addEventListener('submit', async (e)
     const res = await fetch('/api/users/first-login', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ username: pending.username, email, newPassword: newpass })
+      body:    JSON.stringify({
+        username:       pending.username,
+        email,
+        newPassword:    newpass,
+        warParticipant: document.getElementById('fl-war')?.checked || false
+      })
     });
 
     const data = await res.json();
@@ -94,6 +99,18 @@ document.getElementById('first-login-form').addEventListener('submit', async (e)
 
     sessionStorage.removeItem('mk_pending_user');
     Auth.setSession({ ...pending, email });
+
+    /* Mensaje de bienvenida en el chat */
+    try {
+      if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+        firebase.database().ref('chat/messages').push({
+          username:  'Mini Kripta',
+          text:      `⚔ ¡${pending.username} se ha unido a Mini Kripta! ¡Bienvenido/a!`,
+          timestamp: Date.now(),
+          system:    true
+        });
+      }
+    } catch { /* silencio */ }
 
     const returnUrl = new URLSearchParams(window.location.search).get('returnUrl');
     window.location.href = returnUrl ? decodeURIComponent(returnUrl) : 'index.html';
@@ -219,6 +236,18 @@ document.getElementById('register-form').addEventListener('submit', async (e) =>
     /* Éxito */
     document.getElementById('modal-register').style.display = 'none';
     document.getElementById('register-form').reset();
+
+    /* Mensaje de bienvenida en el chat */
+    try {
+      if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+        firebase.database().ref('chat/messages').push({
+          username:  'Mini Kripta',
+          text:      `⚔ ¡${username} se ha unido a Mini Kripta! ¡Bienvenido/a!`,
+          timestamp: Date.now(),
+          system:    true
+        });
+      }
+    } catch { /* silencio si Firebase no está listo */ }
 
     /* Rellenar login con el username para facilitar el acceso */
     document.getElementById('username').value = username;
