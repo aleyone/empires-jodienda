@@ -1,6 +1,20 @@
 {
-  "currentVersion": "2.3",
+  "currentVersion": "2.4",
   "versions": [
+    {
+      "version": "2.4",
+      "date": "2026-05-04",
+      "title": "Guerras y mejoras de alianza",
+      "changes": [
+        "Estadísticas de guerras en la vista de la alianza — puntos última guerra y total acumulado",
+        "Filtros en la alianza: participantes en guerra, sin guerra, y ordenación por puntos",
+        "Historial de guerras con top atacantes y lista completa por guerra",
+        "Checkbox 'Participo en guerra' en el formulario de primer acceso",
+        "Mensaje automático en el chat cuando un nuevo miembro se une a la alianza",
+        "Mensajes del sistema con estilo diferente en el chat",
+        "Gestión de participación en guerra desde el panel de administración"
+      ]
+    },
     {
       "version": "2.3",
       "date": "2026-05-03",
