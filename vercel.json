@@ -2,6 +2,22 @@
   "version": 2,
   "rewrites": [
     {
+      "source": "/api/media/upload",
+      "destination": "/api/media"
+    },
+    {
+      "source": "/api/media/proxy",
+      "destination": "/api/media"
+    },
+    {
+      "source": "/api/wars",
+      "destination": "/api/wars"
+    },
+    {
+      "source": "/api/wars/:id",
+      "destination": "/api/wars?id=:id"
+    },
+    {
       "source": "/api/users/register",
       "destination": "/api/users"
     },
@@ -16,10 +32,6 @@
     {
       "source": "/api/teams/:username/:position",
       "destination": "/api/teams?username=:username&position=:position"
-    },
-    {
-      "source": "/api/upload",
-      "destination": "/api/upload"
     },
     {
       "source": "/api/users/first-login",
@@ -72,10 +84,6 @@
     {
       "source": "/api/notifications",
       "destination": "/api/notifications"
-    },
-    {
-      "source": "/api/image-proxy",
-      "destination": "/api/image-proxy"
     },
     {
       "source": "/api/hero-lookup",
