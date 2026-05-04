@@ -152,9 +152,10 @@ document.getElementById('user-form').addEventListener('submit', async (e) => {
   try {
     const endpoint = isNewUser ? '/api/users' : `/api/users/${originalUsername}`;
     const method   = isNewUser ? 'POST' : 'PUT';
+    const warParticipant = document.getElementById('u-war')?.checked || false;
     const body     = isNewUser
       ? { username, email, role, password }
-      : { username, email, role };
+      : { username, email, role, warParticipant };
 
     const res = await fetch(endpoint, {
       method,
