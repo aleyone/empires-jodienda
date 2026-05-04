@@ -191,9 +191,12 @@ async function handleFirstLogin(req, res) {
   const idx = users.findIndex(u => u.username.toLowerCase() === username.toLowerCase());
   if (idx === -1) return res.status(404).json({ error: 'Usuario no encontrado' });
 
-  users[idx].email        = email;
-  users[idx].passwordHash = await hashPassword(newPassword);
-  users[idx].firstLogin   = false;
+  users[idx].email          = email;
+  users[idx].passwordHash   = await hashPassword(newPassword);
+  users[idx].firstLogin     = false;
+  if (req.body.warParticipant !== undefined) {
+    users[idx].warParticipant = req.body.warParticipant;
+  }
 
   await writeUsers(users, sha, `first login: ${users[idx].username}`);
   return res.status(200).json({ ok: true });
