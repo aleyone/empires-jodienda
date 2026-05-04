@@ -469,7 +469,7 @@ async function importWikiImage(imageUrl) {
     bar.style.width = '30%';
 
     /* Descargar imagen via proxy para evitar CORS */
-    const res = await fetch(`/api/image-proxy?url=${encodeURIComponent(imageUrl)}`);
+    const res = await fetch(`/api/media/proxy?url=${encodeURIComponent(imageUrl)}`);
     if (!res.ok) throw new Error('No se pudo descargar la imagen');
 
     bar.style.width = '60%';
@@ -524,7 +524,7 @@ document.getElementById('additional-image-input').addEventListener('change', asy
     fd.append('image', blob, `additional-${Date.now()}.${ext}`);
     fd.append('data',  JSON.stringify({ _additionalUpload: true }));
 
-    const res = await fetch('/api/upload', {
+    const res = await fetch('/api/media/upload', {
       method:  'POST',
       headers: { 'x-username': Auth.getUsername() },
       body:    fd
