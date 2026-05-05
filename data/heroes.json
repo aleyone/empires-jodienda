@@ -153,6 +153,29 @@
       "createdAt": "2026-05-01T15:15:23.924Z",
       "wikiCheckedAt": "2026-05-04T10:12:55.894Z",
       "wikiHasUpdates": false
+    },
+    {
+      "id": "473264682fcd",
+      "name": "garten",
+      "element": "nature",
+      "rarity": "5",
+      "family": "gar",
+      "heroClass": "",
+      "manaSpeed": "Promedio",
+      "power": "1048",
+      "attack": "1048",
+      "defense": "1083",
+      "health": "1812",
+      "specialName": "Bone Club Party",
+      "specialDesc": "Boosts health of all allies by 700. Boosted health can exceed max HP.\nReduces max health of all enemies by 700. The effect is stronger against targets with boosted health. (Max health can’t get lower than 30% of the original max health. Any boosted health is reduced by an additional 700.\nAll allies except the caster receive Softskin.\nAll allies are immune to new status ailments that affect healing for 4 turns. Removes status ailments that affect healing from allies.",
+      "notes": "",
+      "howToBeat": "",
+      "ratingHard": 5,
+      "ratingCool": 4,
+      "additionalImages": [],
+      "imagePath": "https://res.cloudinary.com/dav2tz0w7/image/upload/v1777970575/mini-kripta/heroes/mini-kripta/heroes/1777970575375-895e386d.webp",
+      "createdBy": "_^Dune^_",
+      "createdAt": "2026-05-05T08:42:56.007Z"
     }
   ]
 }
