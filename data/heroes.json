@@ -160,7 +160,7 @@
       "element": "nature",
       "rarity": "5",
       "family": "gar",
-      "heroClass": "",
+      "heroClass": "scr",
       "manaSpeed": "Promedio",
       "power": "1048",
       "attack": "1048",
@@ -175,7 +175,11 @@
       "additionalImages": [],
       "imagePath": "https://res.cloudinary.com/dav2tz0w7/image/upload/v1777970575/mini-kripta/heroes/mini-kripta/heroes/1777970575375-895e386d.webp",
       "createdBy": "_^Dune^_",
-      "createdAt": "2026-05-05T08:42:56.007Z"
+      "createdAt": "2026-05-05T08:42:56.007Z",
+      "wikiCheckedAt": "2026-05-05T08:43:17.593Z",
+      "wikiHasUpdates": false,
+      "updatedAt": "2026-05-05T08:43:18.391Z",
+      "updatedBy": "_^Dune^_"
     }
   ]
 }
