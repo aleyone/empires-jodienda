@@ -21,8 +21,9 @@
         }
       ],
       "totalCount": 2,
-      "read": false,
-      "createdAt": "2026-05-01T22:22:34.443Z"
+      "read": true,
+      "createdAt": "2026-05-01T22:22:34.443Z",
+      "readAt": "2026-05-05T08:44:27.469Z"
     }
   ]
 }
