@@ -61,6 +61,68 @@
           "points": 9
         }
       ]
+    },
+    {
+      "id": "war-2026-05-06",
+      "startDate": "2026-05-06",
+      "endDate": "2026-05-07",
+      "type": "Por determinar",
+      "result": {
+        "ourScore": 4620,
+        "enemyScore": 4673,
+        "enemyName": "India*India",
+        "won": false
+      },
+      "participants": [
+        {
+          "username": "Chris",
+          "points": 842
+        },
+        {
+          "username": "KSanya",
+          "points": 630
+        },
+        {
+          "username": "Danna",
+          "points": 522
+        },
+        {
+          "username": "Pedro",
+          "points": 473
+        },
+        {
+          "username": "SirCrisis",
+          "points": 453
+        },
+        {
+          "username": "DarkAngel",
+          "points": 388
+        },
+        {
+          "username": "el*negro666",
+          "points": 338
+        },
+        {
+          "username": "Leeroux",
+          "points": 323
+        },
+        {
+          "username": "_^Dune^_",
+          "points": 282
+        },
+        {
+          "username": "DonDa",
+          "points": 228
+        },
+        {
+          "username": "HaroldSam",
+          "points": 126
+        },
+        {
+          "username": "R.E.N.N.2017",
+          "points": 15
+        }
+      ]
     }
   ]
 }
