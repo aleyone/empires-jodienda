@@ -66,7 +66,7 @@
       "id": "war-2026-05-06",
       "startDate": "2026-05-06",
       "endDate": "2026-05-07",
-      "type": "Ataque aéreo",
+      "type": "Ataque Aéreo",
       "result": {
         "ourScore": 4620,
         "enemyScore": 4673,
@@ -121,6 +121,68 @@
         {
           "username": "R.E.N.N.2017",
           "points": 15
+        }
+      ]
+    },
+    {
+      "id": "war-2026-05-09",
+      "startDate": "2026-05-09",
+      "endDate": "2026-05-10",
+      "type": "Ataque Aéreo",
+      "result": {
+        "ourScore": 5250,
+        "enemyScore": 4868,
+        "enemyName": "сонечко Запоріжжя",
+        "won": true
+      },
+      "participants": [
+        {
+          "username": "SirCrisis",
+          "points": 800
+        },
+        {
+          "username": "el*negro666",
+          "points": 666
+        },
+        {
+          "username": "DarkAngel",
+          "points": 624
+        },
+        {
+          "username": "Chris",
+          "points": 607
+        },
+        {
+          "username": "Leeroux",
+          "points": 552
+        },
+        {
+          "username": "Pedro",
+          "points": 529
+        },
+        {
+          "username": "KSanya",
+          "points": 480
+        },
+        {
+          "username": "DonDa",
+          "points": 426
+        },
+        {
+          "username": "_^Dune^_",
+          "points": 238
+        },
+        {
+          "username": "R.E.N.N.2017",
+          "points": 207
+        },
+        {
+          "username": "HaroldSam",
+          "points": 121
+        },
+        {
+          "username": "Danna",
+          "points": 0
         }
       ]
     }
