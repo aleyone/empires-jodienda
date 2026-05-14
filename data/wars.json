@@ -185,6 +185,68 @@
           "points": 0
         }
       ]
+    },
+    {
+      "id": "war-2026-05-13",
+      "startDate": "2026-05-13",
+      "endDate": "2026-05-14",
+      "type": "Avalancha de Flechas",
+      "result": {
+        "ourScore": 4474,
+        "enemyScore": 4621,
+        "enemyName": "Brameiros",
+        "won": false
+      },
+      "participants": [
+        {
+          "username": "Chris",
+          "points": 656
+        },
+        {
+          "username": "SirCrisis",
+          "points": 633
+        },
+        {
+          "username": "Danna",
+          "points": 606
+        },
+        {
+          "username": "el*negro666",
+          "points": 464
+        },
+        {
+          "username": "Pedro",
+          "points": 411
+        },
+        {
+          "username": "Leeroux",
+          "points": 409
+        },
+        {
+          "username": "KSanya",
+          "points": 394
+        },
+        {
+          "username": "_^Dune^_",
+          "points": 356
+        },
+        {
+          "username": "DarkAngel",
+          "points": 265
+        },
+        {
+          "username": "DonDa",
+          "points": 173
+        },
+        {
+          "username": "HaroldSam",
+          "points": 107
+        },
+        {
+          "username": "R.E.N.N.2017",
+          "points": 0
+        }
+      ]
     }
   ]
 }
